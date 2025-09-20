@@ -1,6 +1,7 @@
 ﻿services:
   
   ### Service Catalog ###
+  
   catalog.database:
     image: postgres:latest
     container_name: catalog_database
@@ -20,16 +21,54 @@
         condition: service_healthy
         required: true
         restart: true
+  
+  ### Service Basket ###
+  
+  basket.database:
+    image: postgres:latest
+    container_name: basket_database
+    networks:
+      - basket_network
+  
+  basket.redis:
+    image: redis:latest
+    container_name: basket_redis
+    networks:
+      - basket_network
 
+  basket.api:
+    image: basket.api
+    container_name: basket_api
+    build:
+      context: .
+      dockerfile: eshop.services/basket/Basket.API/Dockerfile
+    networks:
+      - basket_network
+    depends_on:
+      basket.database:
+        condition: service_healthy
+        required: true
+        restart: true
+      basket.redis:
+        condition: service_healthy
+        required: true
+        restart: true
 
 ### Shared infrastructure ###
 volumes:
   catalog_data:
     name: catalog_data
+  basket_data:
+    name: basket_data
+  redis_data:
+    name: redis_data
 
 
 networks:
   catalog_network:
     name: catalog_network
+  basket_network:
+    name: basket_network 
+
 
 

@@ -25,4 +25,42 @@
       - ASPNETCORE_HTTP_PORTS=${CATALOG_API_PORT}
       - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=${CATALOG_POSTGRES_PORT};Database=${CATALOG_POSTGRES_DB};Username=${CATALOG_POSTGRES_USER};Password=${CATALOG_POSTGRES_PASSWORD}
   
+  ### Service Basket ###
+  
+  basket.database:
+    restart: always
+    shm_size: 128mb
+    ports:
+      - "${BASKET_POSTGRES_PORT}:5432"
+    volumes:
+      - basket_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: ${BASKET_POSTGRES_PASSWORD}
+      POSTGRES_USER: ${BASKET_POSTGRES_USER}
+      POSTGRES_DB: ${BASKET_POSTGRES_DB}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${BASKET_POSTGRES_USER} -d ${BASKET_POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+  
 
+  basket.redis:
+    restart: always
+    ports:
+      - "${BASKET_REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+  
+  basket.api:
+    ports:
+      - "6061:${BASKET_API_PORT}" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${BASKET_API_PORT}
+      - ConnectionStrings__BasketConnection=Server=basket.database;Port=5432;Database=${BASKET_POSTGRES_DB};Username=${BASKET_POSTGRES_USER};Password=${BASKET_POSTGRES_PASSWORD}
+      - ConnectionStrings__RedisConnection=basket.redis:6379
