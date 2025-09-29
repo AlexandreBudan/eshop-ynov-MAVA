@@ -1,6 +1,7 @@
 using Basket.API.Data.Repositories;
 using Basket.API.Models;
 using BuildingBlocks.CQRS;
+using Discount.Grpc;
 
 namespace Basket.API.Features.Baskets.Commands.CreateBasket;
 
@@ -8,7 +9,7 @@ namespace Basket.API.Features.Baskets.Commands.CreateBasket;
 /// Handles the creation of a shopping basket by processing the CreateBasketCommand.
 /// Implements the <see cref="ICommandHandler{CreateBasketCommand, CreateBasketCommandResult}"/> interface.
 /// </summary>
-public class CreateBasketCommandHandler(IBasketRepository repository) : ICommandHandler<CreateBasketCommand, CreateBasketCommandResult>
+public class CreateBasketCommandHandler(IBasketRepository repository, DiscountProtoService.DiscountProtoServiceClient discountProtoServiceClient) : ICommandHandler<CreateBasketCommand, CreateBasketCommandResult>
 {
     /// <summary>
     /// Handles the request to create a shopping basket.
@@ -39,9 +40,10 @@ public class CreateBasketCommandHandler(IBasketRepository repository) : ICommand
     {
         foreach (var item in cart.Items)
         {
-            // TODO in the futur by applying discount on all product
+            var coupon = await discountProtoServiceClient.GetDiscountAsync(new GetDiscountRequest
+                { ProductName = item.ProductName }, cancellationToken: cancellationToken);
             
-            item.Price -= 0;
+            item.Price -= (decimal)coupon.Amount;
         }
     }
 }

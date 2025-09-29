@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks", "eshop.sha
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basket.API", "eshop.services\basket\Basket.API\Basket.API.csproj", "{E171F86A-5671-418B-9A78-A1C359B3D156}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Discount.Grpc", "eshop.services\discount\Discount.Grpc\Discount.Grpc.csproj", "{C560CBBD-3514-4EE0-80B0-94547D71C001}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,7 @@ Global
 		{545B5213-3E49-4315-B6D7-487DCAF12138} = {D7E7EC50-279D-4882-9651-A4EEFEFFAC53}
 		{1259ABFA-EC5E-429D-A81F-7993E7CB6E09} = {9311966F-6E39-43C6-808E-58D8B4E19BB8}
 		{E171F86A-5671-418B-9A78-A1C359B3D156} = {24D3782D-E953-4439-A1DE-3A150D0EBF2D}
+		{C560CBBD-3514-4EE0-80B0-94547D71C001} = {1B5C2044-5D35-4E07-B989-7B44194661D1}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{545B5213-3E49-4315-B6D7-487DCAF12138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -60,5 +63,9 @@ Global
 		{E171F86A-5671-418B-9A78-A1C359B3D156}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E171F86A-5671-418B-9A78-A1C359B3D156}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E171F86A-5671-418B-9A78-A1C359B3D156}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -64,3 +64,12 @@
       - ASPNETCORE_HTTP_PORTS=${BASKET_API_PORT}
       - ConnectionStrings__BasketConnection=Server=basket.database;Port=5432;Database=${BASKET_POSTGRES_DB};Username=${BASKET_POSTGRES_USER};Password=${BASKET_POSTGRES_PASSWORD}
       - ConnectionStrings__RedisConnection=basket.redis:6379
+        
+  ### Service Discount ###
+  
+  discount.grpc:
+    ports:
+      - "6062:${DISCOUNT_API_PORT}" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${DISCOUNT_API_PORT}
+      - ConnectionStrings__DiscountConnection=Data Source = discountDatabase
