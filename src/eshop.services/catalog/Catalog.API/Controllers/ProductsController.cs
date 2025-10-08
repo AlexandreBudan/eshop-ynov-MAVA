@@ -1,7 +1,10 @@
+using Catalog.API.Features.Products.Commands.BulkImportProducts;
 using Catalog.API.Features.Products.Commands.CreateProduct;
+using Catalog.API.Features.Products.Commands.DeleteProduct;
 using Catalog.API.Features.Products.Commands.UpdateProduct;
 using Catalog.API.Features.Products.Queries.GetProductById;
 using Catalog.API.Features.Products.Queries.GetProductByCategory;
+using Catalog.API.Features.Products.Queries.GetProducts;
 using Catalog.API.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -50,18 +53,19 @@ public class ProductsController(ISender sender) : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a collection of products from the catalog.
+    /// Retrieves a paginated collection of products from the catalog.
     /// </summary>
+    /// <param name="pageNumber">The current page number (starting from 1).</param>
+    /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A collection of products wrapped in an action result.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
-        [FromQuery] int pageNumber
-       , [FromQuery] int pageSize)
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        // TODO
-        var result = await sender.Send(new ()); 
-        return Ok();
+        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize));
+        return Ok(result.Products);
     }
 
     /// <summary>
@@ -88,8 +92,7 @@ public class ProductsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<bool>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand request)
     {
-        // TODO
-        var result = await sender.Send(request);
+        var result = await sender.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageFile, request.Categories));
         return Ok(result.IsSuccessful);
     }
 
@@ -103,10 +106,45 @@ public class ProductsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Product>> DeleteProduct(Guid id)
     {
-        // TODO
-        var result = await sender.Send(new ());
-        return Ok();
+        var result = await sender.Send(new DeleteProductCommand(id));
+        return Ok(result.IsSuccessful);
     }
-    
-    // TODO : faire une ressource pour importer à partir d'un fichier excel les produits
+
+    /// <summary>
+    /// Imports multiple products from an Excel file.
+    /// </summary>
+    /// <param name="file">The Excel file containing the products to import.</param>
+    /// <returns>Import statistics including success count, failure count, and errors.</returns>
+    /// <remarks>
+    /// Expected Excel format:
+    /// - Column 1: Name (required)
+    /// - Column 2: Description
+    /// - Column 3: Price (required, numeric)
+    /// - Column 4: ImageFile
+    /// - Column 5: Categories (comma-separated)
+    ///
+    /// The first row should contain headers and will be skipped.
+    /// </remarks>
+    [HttpPost("bulk-import")]
+    [ProducesResponseType(typeof(BulkImportProductsCommandResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkImportProductsCommandResult>> BulkImportProducts(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded");
+        await using var fileStream = file.OpenReadStream();
+        var memoryStream = new MemoryStream();
+        await fileStream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+        var command = new BulkImportProductsCommand
+        {
+            FileStream = memoryStream,
+            FileName = file.FileName
+        };
+        var result = await sender.Send(command);
+        memoryStream.Dispose();
+        if (result.TotalProcessed == 0)
+            return BadRequest(result);
+        return Ok(result);
+    }
 }
