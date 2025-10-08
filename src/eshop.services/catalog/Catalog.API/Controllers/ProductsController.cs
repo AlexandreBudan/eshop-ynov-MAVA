@@ -45,8 +45,8 @@ public class ProductsController(ISender sender) : ControllerBase
         // TODO
         if (string.IsNullOrWhiteSpace(category))
             return BadRequest("Category is required");
-        
-        var result = await sender.Send(new ());
+
+        var result = await sender.Send(new());
         return Ok();
     }
 
@@ -61,7 +61,7 @@ public class ProductsController(ISender sender) : ControllerBase
        , [FromQuery] int pageSize)
     {
         // TODO
-        var result = await sender.Send(new ()); 
+        var result = await sender.Send(new());
         return Ok();
     }
 
@@ -105,7 +105,7 @@ public class ProductsController(ISender sender) : ControllerBase
     public async Task<ActionResult<Product>> DeleteProduct(Guid id)
     {
         // TODO
-        var result = await sender.Send(new ());
+        var result = await sender.Send(new());
         return Ok();
     }
 
@@ -131,20 +131,15 @@ public class ProductsController(ISender sender) : ControllerBase
     {
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded");
-
         await using var stream = file.OpenReadStream();
-
         var command = new BulkImportProductsCommand
         {
             FileStream = stream,
             FileName = file.FileName
         };
-
         var result = await sender.Send(command);
-
         if (result.TotalProcessed == 0)
             return BadRequest(result);
-
         return Ok(result);
     }
 }

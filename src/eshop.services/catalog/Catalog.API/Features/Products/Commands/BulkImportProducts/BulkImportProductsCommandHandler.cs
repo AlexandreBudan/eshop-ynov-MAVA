@@ -29,7 +29,6 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
         {
             using var package = new ExcelPackage(request.FileStream);
             var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-
             if (worksheet == null)
             {
                 result.Errors.Add("No worksheet found in the Excel file");
@@ -37,15 +36,13 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
             }
 
             var rowCount = worksheet.Dimension?.Rows ?? 0;
-
-            if (rowCount <= 1) // Only header or empty
+            if (rowCount <= 1)
             {
                 result.Errors.Add("No data rows found in the Excel file");
                 return result;
             }
 
-            // Expected columns: Name, Description, Price, ImageFile, Categories (comma-separated)
-            // Header row is row 1, data starts at row 2
+            // Expected columns: Name, Description, Price, ImageFile, Categories
             for (int row = 2; row <= rowCount; row++)
             {
                 result.TotalProcessed++;
@@ -57,8 +54,6 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                     var priceText = worksheet.Cells[row, 3].Text?.Trim();
                     var imageFile = worksheet.Cells[row, 4].Text?.Trim();
                     var categoriesText = worksheet.Cells[row, 5].Text?.Trim();
-
-                    // Validate required fields
                     if (string.IsNullOrWhiteSpace(name))
                     {
                         result.Errors.Add($"Row {row}: Name is required");
@@ -66,9 +61,7 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                         continue;
                     }
 
-                    // Normalize price format (handle both comma and dot as decimal separator)
                     var normalizedPrice = priceText?.Replace(',', '.');
-
                     if (!decimal.TryParse(normalizedPrice, NumberStyles.Any, CultureInfo.InvariantCulture, out var price) || price <= 0)
                     {
                         result.Errors.Add($"Row {row}: Invalid price value '{priceText}'");
@@ -76,10 +69,8 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                         continue;
                     }
 
-                    // Check if product already exists
                     var exists = await documentSession.Query<Product>()
                         .AnyAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
-
                     if (exists)
                     {
                         result.Errors.Add($"Row {row}: Product '{name}' already exists");
@@ -87,15 +78,13 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                         continue;
                     }
 
-                    // Parse categories
                     var categories = string.IsNullOrWhiteSpace(categoriesText)
-                        ? new List<string>()
+                        ? []
                         : categoriesText.Split(',', StringSplitOptions.RemoveEmptyEntries)
                             .Select(c => c.Trim())
                             .Where(c => !string.IsNullOrWhiteSpace(c))
                             .ToList();
 
-                    // Create product
                     var product = new Product
                     {
                         Id = Guid.NewGuid(),
