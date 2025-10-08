@@ -42,6 +42,11 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                 return result;
             }
 
+            var existingProductNames = await documentSession.Query<Product>()
+                .Select(p => p.Name.ToLower())
+                .ToListAsync(cancellationToken);
+            var existingNamesSet = new HashSet<string>(existingProductNames, StringComparer.OrdinalIgnoreCase);
+
             // Expected columns: Name, Description, Price, ImageFile, Categories
             for (int row = 2; row <= rowCount; row++)
             {
@@ -69,9 +74,7 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                         continue;
                     }
 
-                    var exists = await documentSession.Query<Product>()
-                        .AnyAsync(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase), cancellationToken);
-                    if (exists)
+                    if (existingNamesSet.Contains(name))
                     {
                         result.Errors.Add($"Row {row}: Product '{name}' already exists");
                         result.FailureCount++;
@@ -96,6 +99,7 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                     };
 
                     documentSession.Store(product);
+                    existingNamesSet.Add(name);
                     result.SuccessCount++;
                 }
                 catch (Exception ex)
