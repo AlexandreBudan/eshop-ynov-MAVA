@@ -131,13 +131,17 @@ public class ProductsController(ISender sender) : ControllerBase
     {
         if (file == null || file.Length == 0)
             return BadRequest("No file uploaded");
-        await using var stream = file.OpenReadStream();
+        await using var fileStream = file.OpenReadStream();
+        var memoryStream = new MemoryStream();
+        await fileStream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
         var command = new BulkImportProductsCommand
         {
-            FileStream = stream,
+            FileStream = memoryStream,
             FileName = file.FileName
         };
         var result = await sender.Send(command);
+        memoryStream.Dispose();
         if (result.TotalProcessed == 0)
             return BadRequest(result);
         return Ok(result);
