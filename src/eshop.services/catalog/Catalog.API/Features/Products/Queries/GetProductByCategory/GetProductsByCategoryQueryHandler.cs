@@ -1,4 +1,3 @@
-using System.Linq;
 using BuildingBlocks.CQRS;
 using Catalog.API.Exceptions;
 using Catalog.API.Models;
