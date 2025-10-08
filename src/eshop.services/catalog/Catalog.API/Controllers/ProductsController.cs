@@ -1,6 +1,7 @@
 using Catalog.API.Features.Products.Commands.CreateProduct;
 using Catalog.API.Features.Products.Commands.UpdateProduct;
 using Catalog.API.Features.Products.Queries.GetProductById;
+using Catalog.API.Features.Products.Queries.GetProducts;
 using Catalog.API.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -50,18 +51,19 @@ public class ProductsController(ISender sender) : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a collection of products from the catalog.
+    /// Retrieves a paginated collection of products from the catalog.
     /// </summary>
+    /// <param name="pageNumber">The current page number (starting from 1).</param>
+    /// <param name="pageSize">The number of items per page.</param>
     /// <returns>A collection of products wrapped in an action result.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
-        [FromQuery] int pageNumber
-       , [FromQuery] int pageSize)
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 10)
     {
-        // TODO
-        var result = await sender.Send(new ()); 
-        return Ok();
+        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize));
+        return Ok(result.Products);
     }
 
     /// <summary>
