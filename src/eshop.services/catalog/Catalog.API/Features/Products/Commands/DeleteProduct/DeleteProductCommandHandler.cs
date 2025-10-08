@@ -1,7 +1,6 @@
 using BuildingBlocks.CQRS;
 using Catalog.API.Exceptions;
 using Catalog.API.Models;
-using Mapster;
 using Marten;
 
 namespace Catalog.API.Features.Products.Commands.DeleteProduct;
