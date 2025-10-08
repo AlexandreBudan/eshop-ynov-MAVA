@@ -1,5 +1,6 @@
 using Catalog.API.Features.Products.Commands.BulkImportProducts;
 using Catalog.API.Features.Products.Commands.CreateProduct;
+using Catalog.API.Features.Products.Commands.DeleteProduct;
 using Catalog.API.Features.Products.Commands.UpdateProduct;
 using Catalog.API.Features.Products.Queries.GetProductById;
 using Catalog.API.Models;
@@ -89,8 +90,7 @@ public class ProductsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<bool>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand request)
     {
-        // TODO
-        var result = await sender.Send(request);
+        var result = await sender.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageFile, request.Categories));
         return Ok(result.IsSuccessful);
     }
 
@@ -104,9 +104,8 @@ public class ProductsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<Product>> DeleteProduct(Guid id)
     {
-        // TODO
-        var result = await sender.Send(new());
-        return Ok();
+        var result = await sender.Send(new DeleteProductCommand(id));
+        return Ok(result.IsSuccessful);
     }
 
     /// <summary>
