@@ -19,12 +19,15 @@ public class GetProductsQueryHandler(IDocumentSession documentSession)
     /// <returns>A task containing a list of products.</returns>
     public async Task<GetProductsQueryResult> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        var skip = (request.PageNumber - 1) * request.PageSize;
+        // Validate pagination parameters
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
+        var skip = (pageNumber - 1) * pageSize;
 
         var products = await documentSession
             .Query<Product>()
             .Skip(skip)
-            .Take(request.PageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
 
         return new GetProductsQueryResult(products);
