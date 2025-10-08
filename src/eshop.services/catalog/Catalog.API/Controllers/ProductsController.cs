@@ -1,3 +1,4 @@
+using Catalog.API.Features.Products.Commands.BulkImportProducts;
 using Catalog.API.Features.Products.Commands.CreateProduct;
 using Catalog.API.Features.Products.Commands.DeleteProduct;
 using Catalog.API.Features.Products.Commands.UpdateProduct;
@@ -45,8 +46,8 @@ public class ProductsController(ISender sender) : ControllerBase
         // TODO
         if (string.IsNullOrWhiteSpace(category))
             return BadRequest("Category is required");
-        
-        var result = await sender.Send(new ());
+
+        var result = await sender.Send(new());
         return Ok();
     }
 
@@ -61,7 +62,7 @@ public class ProductsController(ISender sender) : ControllerBase
        , [FromQuery] int pageSize)
     {
         // TODO
-        var result = await sender.Send(new ()); 
+        var result = await sender.Send(new());
         return Ok();
     }
 
@@ -106,6 +107,42 @@ public class ProductsController(ISender sender) : ControllerBase
         var result = await sender.Send(new DeleteProductCommand(id));
         return Ok(result.IsSuccessful);
     }
-    
-    // TODO : faire une ressource pour importer à partir d'un fichier excel les produits
+
+    /// <summary>
+    /// Imports multiple products from an Excel file.
+    /// </summary>
+    /// <param name="file">The Excel file containing the products to import.</param>
+    /// <returns>Import statistics including success count, failure count, and errors.</returns>
+    /// <remarks>
+    /// Expected Excel format:
+    /// - Column 1: Name (required)
+    /// - Column 2: Description
+    /// - Column 3: Price (required, numeric)
+    /// - Column 4: ImageFile
+    /// - Column 5: Categories (comma-separated)
+    ///
+    /// The first row should contain headers and will be skipped.
+    /// </remarks>
+    [HttpPost("bulk-import")]
+    [ProducesResponseType(typeof(BulkImportProductsCommandResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BulkImportProductsCommandResult>> BulkImportProducts(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded");
+        await using var fileStream = file.OpenReadStream();
+        var memoryStream = new MemoryStream();
+        await fileStream.CopyToAsync(memoryStream);
+        memoryStream.Position = 0;
+        var command = new BulkImportProductsCommand
+        {
+            FileStream = memoryStream,
+            FileName = file.FileName
+        };
+        var result = await sender.Send(command);
+        memoryStream.Dispose();
+        if (result.TotalProcessed == 0)
+            return BadRequest(result);
+        return Ok(result);
+    }
 }
