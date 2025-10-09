@@ -27,22 +27,22 @@ public static class ProductFilter
     {
         if (!string.IsNullOrWhiteSpace(name))
         {
-            query = query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
+            query = (IMartenQueryable<Product>)query.Where(p => p.Name.ToLower().Contains(name.ToLower()));
         }
 
         if (minPrice.HasValue)
         {
-            query = query.Where(p => p.Price >= minPrice.Value);
+            query = (IMartenQueryable<Product>)query.Where(p => p.Price >= minPrice.Value);
         }
 
         if (maxPrice.HasValue)
         {
-            query = query.Where(p => p.Price <= maxPrice.Value);
+            query = (IMartenQueryable<Product>)query.Where(p => p.Price <= maxPrice.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(category))
         {
-            query = query.Where(p => p.Categories.Contains(category));
+            query = (IMartenQueryable<Product>)query.Where(p => p.Categories.Contains(category));
         }
 
         return query;
