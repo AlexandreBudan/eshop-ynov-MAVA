@@ -1,5 +1,6 @@
 using Basket.API.Features.Baskets.Commands.CreateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasket;
+using Basket.API.Features.Baskets.Commands.DeleteBasketItem;
 using Basket.API.Features.Baskets.Queries.GetBasketByUserName;
 using Basket.API.Models;
 using MediatR;
@@ -58,8 +59,21 @@ public class BasketsController (ISender sender) : ControllerBase
         return Ok(result.IsSuccess);
     }
     
-    // TODO Update basket product quantity
+    // TODO Update basket product quantitye
     
-    //TODO Delete item in user basket
+    /// <summary>
+    /// Deletes an item from the shopping basket for the specified user.
+    /// </summary>
+    /// <param name="userName">The username whose shopping basket is to be modified.</param>
+    /// <param name="productId">The id of the product to be removed from the basket.</param>
+    /// <returns>A boolean value indicating whether the item was successfully deleted.</returns>
+    [HttpDelete("items/{productId:guid}")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<bool>> DeleteBasketItem(string userName, Guid productId)
+    {
+        var result = await sender.Send(new DeleteBasketItemCommand(userName, productId));
+        return Ok(result.IsSuccess);
+    }
     
 }
