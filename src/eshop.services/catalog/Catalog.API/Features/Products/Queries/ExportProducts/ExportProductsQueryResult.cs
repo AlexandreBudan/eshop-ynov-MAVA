@@ -1,4 +1,3 @@
-
 namespace Catalog.API.Features.Products.Queries.ExportProducts;
 
 /// <summary>

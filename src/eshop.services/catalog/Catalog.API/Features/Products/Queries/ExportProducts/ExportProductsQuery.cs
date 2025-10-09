@@ -1,4 +1,3 @@
-
 using BuildingBlocks.CQRS;
 
 namespace Catalog.API.Features.Products.Queries.ExportProducts;

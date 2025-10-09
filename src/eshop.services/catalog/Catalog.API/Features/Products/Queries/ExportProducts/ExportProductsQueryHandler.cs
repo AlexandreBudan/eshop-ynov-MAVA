@@ -1,4 +1,3 @@
-
 using BuildingBlocks.CQRS;
 using Catalog.API.Features.Products.Common;
 using Catalog.API.Models;
