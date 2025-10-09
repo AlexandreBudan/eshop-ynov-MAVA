@@ -1,8 +1,10 @@
 using BuildingBlocks.CQRS;
 using Catalog.API.Features.Products.Common;
 using Catalog.API.Models;
+using CsvHelper;
 using Marten;
 using OfficeOpenXml;
+using System.Globalization;
 using System.Text;
 
 namespace Catalog.API.Features.Products.Queries.ExportProducts;
@@ -21,10 +23,8 @@ public class ExportProductsQueryHandler(IDocumentSession documentSession)
     /// <returns>A <see cref="ExportProductsQueryResult"/> containing the Excel file contents and name.</returns>
     public async Task<ExportProductsQueryResult> Handle(ExportProductsQuery request, CancellationToken cancellationToken)
     {
-
         var query = documentSession.Query<Product>();
-
-        query = (Marten.Linq.IMartenQueryable<Product>)ProductFilter.ApplyFilters(query, request.Name, request.MinPrice, request.MaxPrice, request.Category);
+        query = ProductFilter.ApplyFilters(query, request.Name, request.MinPrice, request.MaxPrice, request.Category);
 
         var products = await query.ToListAsync(cancellationToken);
 
@@ -33,22 +33,19 @@ public class ExportProductsQueryHandler(IDocumentSession documentSession)
 
         if (request.Format.Equals("csv", StringComparison.OrdinalIgnoreCase))
         {
-            var builder = new StringBuilder();
-            builder.AppendLine("Name,Description,Price,Categories");
-
-            foreach (var product in products)
+            using var memoryStream = new MemoryStream();
+            using (var writer = new StreamWriter(memoryStream, Encoding.UTF8))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
             {
-                builder.AppendLine($"{product.Name},{product.Description},{product.Price},{string.Join(",", product.Categories)}");
+                csv.WriteRecords(products);
             }
 
-            fileContents = Encoding.UTF8.GetBytes(builder.ToString());
+            fileContents = memoryStream.ToArray();
             fileName = $"products_{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
         }
         else
         {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
-            
             var worksheet = package.Workbook.Worksheets.Add("Products");
             worksheet.Cells[1, 1].Value = "Name";
             worksheet.Cells[1, 2].Value = "Description";
@@ -66,6 +63,7 @@ public class ExportProductsQueryHandler(IDocumentSession documentSession)
             fileContents = await package.GetAsByteArrayAsync(cancellationToken);
             fileName = $"products_{DateTime.UtcNow:yyyyMMddHHmmss}.xlsx";
         }
+
         return new ExportProductsQueryResult(fileContents, fileName);
     }
 }
