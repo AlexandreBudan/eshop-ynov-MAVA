@@ -24,8 +24,41 @@ public class GetProductsQueryHandler(IDocumentSession documentSession)
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
         var skip = (pageNumber - 1) * pageSize;
 
-        var products = await documentSession
-            .Query<Product>()
+        var query = documentSession.Query<Product>();
+
+        if (!string.IsNullOrWhiteSpace(request.Field) && !string.IsNullOrWhiteSpace(request.Value))
+        {
+            var field = request.Field.Trim().ToLowerInvariant();
+            var value = request.Value.Trim();
+
+            switch (field)
+            {
+                case "name":
+                    query = (Marten.Linq.IMartenQueryable<Product>)query.Where(p => p.Name.ToLower().Contains(value.ToLower()));
+                    break;
+                case "price":
+                    if (value.Contains(":"))
+                    {
+                        var range = value.Split(':');
+                        if (range.Length == 2 && 
+                            decimal.TryParse(range[0], out var minPrice) && 
+                            decimal.TryParse(range[1], out var maxPrice))
+                        {
+                            query = (Marten.Linq.IMartenQueryable<Product>)query.Where(p => p.Price >= minPrice && p.Price <= maxPrice);
+                        }
+                    }
+                    else
+                    {
+                        if (decimal.TryParse(value, out var price))
+                        {
+                            query = (Marten.Linq.IMartenQueryable<Product>)query.Where(p => p.Price == price);
+                        }
+                    }
+                    break;
+            }
+        }
+
+        var products = await query
             .Skip(skip)
             .Take(pageSize)
             .ToListAsync(cancellationToken);

@@ -53,18 +53,22 @@ public class ProductsController(ISender sender) : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a paginated collection of products from the catalog.
+    /// Retrieves a paginated collection of products from the catalog. Can be filtered by a specific field and value.
     /// </summary>
     /// <param name="pageNumber">The current page number (starting from 1).</param>
     /// <param name="pageSize">The number of items per page.</param>
+    /// <param name="field">The field to filter by (e.g., 'name', 'price').</param>
+    /// <param name="value">The value to search for in the specified field.</param>
     /// <returns>A collection of products wrapped in an action result.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] int pageSize = 10,
+        [FromQuery] string? field = null,
+        [FromQuery] string? value = null)
     {
-        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize));
+        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize, field, value));
         return Ok(result.Products);
     }
 
