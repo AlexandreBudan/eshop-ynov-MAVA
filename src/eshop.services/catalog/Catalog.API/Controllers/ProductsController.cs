@@ -42,7 +42,6 @@ public class ProductsController(ISender sender) : ControllerBase
     /// <param name="category">The category by which to filter the products.</param>
     /// <returns>A collection of products belonging to the specified category, if found; otherwise, a bad request response.</returns>
     [HttpGet("category/{category}")]
-    [Obsolete("This endpoint is deprecated. Use the GetProducts endpoint with the category query parameter instead.")]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProductByCategory(string category)
