@@ -42,12 +42,10 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                 return result;
             }
 
-            var existingProductNames = await documentSession.Query<Product>()
-                .Select(p => p.Name.ToLower())
+            var existingProducts = await documentSession.Query<Product>()
+                .Select(p => p.Name)
                 .ToListAsync(cancellationToken);
-            var existingNamesSet = new HashSet<string>(existingProductNames, StringComparer.OrdinalIgnoreCase);
-
-            // Expected columns: Name, Description, Price, ImageFile, Categories
+            var existingNamesSet = new HashSet<string>(existingProducts, StringComparer.OrdinalIgnoreCase);
             for (int row = 2; row <= rowCount; row++)
             {
                 result.TotalProcessed++;
@@ -110,7 +108,6 @@ public class BulkImportProductsCommandHandler(IDocumentSession documentSession, 
                 }
             }
 
-            // Save all products in one transaction
             if (result.SuccessCount > 0)
             {
                 await documentSession.SaveChangesAsync(cancellationToken);
