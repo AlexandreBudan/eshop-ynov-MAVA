@@ -1,4 +1,5 @@
 using BuildingBlocks.CQRS;
+using Catalog.API.Features.Products.Common;
 using Catalog.API.Models;
 using Marten;
 
@@ -24,8 +25,11 @@ public class GetProductsQueryHandler(IDocumentSession documentSession)
         var pageSize = request.PageSize <= 0 ? 10 : request.PageSize;
         var skip = (pageNumber - 1) * pageSize;
 
-        var products = await documentSession
-            .Query<Product>()
+        var query = documentSession.Query<Product>();
+
+        query = ProductFilter.ApplyFilters(query, request.Name, request.MinPrice, request.MaxPrice, request.Category);
+
+        var products = await query
             .Skip(skip)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
