@@ -27,7 +27,7 @@ public class GetProductsQueryHandler(IDocumentSession documentSession)
 
         var query = documentSession.Query<Product>();
 
-        query = (Marten.Linq.IMartenQueryable<Product>)ProductFilter.ApplyFilters(query, request.Name, request.MinPrice, request.MaxPrice, request.Category);
+        query = ProductFilter.ApplyFilters(query, request.Name, request.MinPrice, request.MaxPrice, request.Category);
 
         var products = await query
             .Skip(skip)
