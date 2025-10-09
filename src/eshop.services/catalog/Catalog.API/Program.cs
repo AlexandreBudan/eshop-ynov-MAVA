@@ -13,6 +13,8 @@ var configuration = builder.Configuration;
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+// Mediator Pattern - CQRS
 builder.Services.AddMediatR(config =>
 {
     config.RegisterServicesFromAssembly(typeof(Program).Assembly);
@@ -23,15 +25,18 @@ builder.Services.AddMediatR(config =>
 
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
+// Management PostGreSQl as NOSQL
 builder.Services.AddMarten(options =>
     {
         options.Connection(configuration.GetConnectionString("CatalogConnection") ?? string.Empty);
     })
     .UseLightweightSessions();
 
+// Initiate Database
 if(builder.Environment.IsDevelopment())
     builder.Services.InitializeMartenWith<CatalogInitialData>();
 
+// Health Check
 builder.Services.AddHealthChecks()
     .AddNpgSql(configuration.GetConnectionString("CatalogConnection")!);
 
@@ -52,8 +57,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Global Exception
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 
+// Health check Endpoint
 app.UseHealthChecks("/health", new HealthCheckOptions()
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
