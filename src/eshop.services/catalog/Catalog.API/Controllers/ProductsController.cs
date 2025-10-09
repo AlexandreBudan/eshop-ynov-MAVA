@@ -171,6 +171,10 @@ public class ProductsController(ISender sender) : ControllerBase
     [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
     public async Task<IActionResult> ExportProducts([FromQuery] string? name, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? category, [FromQuery] string format = "excel")
     {
+        if (!string.Equals(format, "excel", StringComparison.OrdinalIgnoreCase) && !string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Invalid format. Supported values are 'excel' and 'csv'.");
+        }
         var result = await sender.Send(new ExportProductsQuery(name, minPrice, maxPrice, category, format));
         var contentType = format.Equals("csv", StringComparison.OrdinalIgnoreCase) ? "text/csv" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
         return File(result.FileContents, contentType, result.FileName);
