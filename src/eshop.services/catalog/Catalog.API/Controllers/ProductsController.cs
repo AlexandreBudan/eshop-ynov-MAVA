@@ -88,12 +88,12 @@ public class ProductsController(ISender sender) : ControllerBase
     /// <param name="request">The details to update the specified product.</param>
     /// <returns>A boolean indicating whether the update was successful or an appropriate error response if the product was not found.</returns>
     [HttpPut("{id:guid}")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<bool>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand request)
+    public async Task<ActionResult<Product>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand request)
     {
         var result = await sender.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageFile, request.Categories));
-        return Ok(result.IsSuccessful);
+        return Ok(result.Product);
     }
 
     /// <summary>

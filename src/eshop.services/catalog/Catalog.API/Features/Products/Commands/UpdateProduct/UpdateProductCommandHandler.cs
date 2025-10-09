@@ -34,6 +34,6 @@ public class UpdateProductCommandHandler(IDocumentSession documentSession) : ICo
 
         await documentSession.SaveChangesAsync(cancellationToken);
 
-        return new UpdateProductCommandResult(true);
+        return new UpdateProductCommandResult(product);
     }
 }
