@@ -46,4 +46,25 @@ public static class DistributedCacheExtensions
         var data = JsonSerializer.SerializeToUtf8Bytes(value);
         return cache.SetAsync(key, data, token);
     }
+
+    /// <summary>
+    /// Stores an object of type <typeparamref name="T"/> in the distributed cache
+    /// under the specified key after serializing it, with expiration options.
+    /// </summary>
+    /// <typeparam name="T">The type of the object to store in the cache.</typeparam>
+    /// <param name="cache">The distributed cache instance to store the item in.</param>
+    /// <param name="key">The key under which the item should be stored in the cache.</param>
+    /// <param name="value">The object of type <typeparamref name="T"/> to be stored in the cache.</param>
+    /// <param name="options">The cache options including expiration settings.</param>
+    /// <param name="token">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation of storing the serialized object
+    /// in the cache with expiration.
+    /// </returns>
+    public static Task SetObjectAsync<T>(this IDistributedCache cache, string key, T value,
+        DistributedCacheEntryOptions options, CancellationToken token = default)
+    {
+        var data = JsonSerializer.SerializeToUtf8Bytes(value);
+        return cache.SetAsync(key, data, options, token);
+    }
 }
