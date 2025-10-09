@@ -5,6 +5,7 @@ using Catalog.API.Features.Products.Commands.UpdateProduct;
 using Catalog.API.Features.Products.Queries.GetProductById;
 using Catalog.API.Features.Products.Queries.GetProductByCategory;
 using Catalog.API.Features.Products.Queries.GetProducts;
+using Catalog.API.Features.Products.Queries.ExportProducts;
 using Catalog.API.Models;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -41,6 +42,7 @@ public class ProductsController(ISender sender) : ControllerBase
     /// <param name="category">The category by which to filter the products.</param>
     /// <returns>A collection of products belonging to the specified category, if found; otherwise, a bad request response.</returns>
     [HttpGet("category/{category}")]
+    [Obsolete("This endpoint is deprecated. Use the GetProducts endpoint with the category query parameter instead.")]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BadRequestObjectResult), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProductByCategory(string category)
@@ -53,22 +55,26 @@ public class ProductsController(ISender sender) : ControllerBase
     }
 
     /// <summary>
-    /// Retrieves a paginated collection of products from the catalog. Can be filtered by a specific field and value.
+    /// Retrieves a paginated collection of products from the catalog.
     /// </summary>
     /// <param name="pageNumber">The current page number (starting from 1).</param>
     /// <param name="pageSize">The number of items per page.</param>
-    /// <param name="field">The field to filter by (e.g., 'name', 'price').</param>
-    /// <param name="value">The value to search for in the specified field.</param>
+    /// <param name="name">Optional: Filter by product name.</param>
+    /// <param name="minPrice">Optional: Filter by minimum price.</param>
+    /// <param name="maxPrice">Optional: Filter by maximum price.</param>
+    /// <param name="category">Optional: Filter by category.</param>
     /// <returns>A collection of products wrapped in an action result.</returns>
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<Product>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<Product>>> GetProducts(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? field = null,
-        [FromQuery] string? value = null)
+        [FromQuery] string? name = null,
+        [FromQuery] decimal? minPrice = null,
+        [FromQuery] decimal? maxPrice = null,
+        [FromQuery] string? category = null)
     {
-        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize, field, value));
+        var result = await sender.Send(new GetProductsQuery(pageNumber, pageSize, name, minPrice, maxPrice, category));
         return Ok(result.Products);
     }
 
@@ -150,5 +156,23 @@ public class ProductsController(ISender sender) : ControllerBase
         if (result.TotalProcessed == 0)
             return BadRequest(result);
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Exports all products to an Excel or CSV file.
+    /// </summary>
+    /// <param name="name">Optional: Filter by product name.</param>
+    /// <param name="minPrice">Optional: Filter by minimum price.</param>
+    /// <param name="maxPrice">Optional: Filter by maximum price.</param>
+    /// <param name="category">Optional: Filter by category.</param>
+    /// <param name="format">The format of the export file (excel or csv).</param>
+    /// <returns>An Excel or CSV file containing all products.</returns>
+    [HttpGet("export")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportProducts([FromQuery] string? name, [FromQuery] decimal? minPrice, [FromQuery] decimal? maxPrice, [FromQuery] string? category, [FromQuery] string format = "excel")
+    {
+        var result = await sender.Send(new ExportProductsQuery(name, minPrice, maxPrice, category, format));
+        var contentType = format.Equals("csv", StringComparison.OrdinalIgnoreCase) ? "text/csv" : "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        return File(result.FileContents, contentType, result.FileName);
     }
 }
