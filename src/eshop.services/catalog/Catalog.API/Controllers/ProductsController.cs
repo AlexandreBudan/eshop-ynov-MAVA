@@ -99,9 +99,10 @@ public class ProductsController(ISender sender) : ControllerBase
     [HttpPut("{id:guid}")]
     [ProducesResponseType(typeof(Product), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Product>> UpdateProduct(Guid id, [FromBody] UpdateProductCommand request)
+    public async Task<ActionResult<Product>> UpdateProduct(Guid id, [FromBody] Product request)
     {
-        var result = await sender.Send(new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageFile, request.Categories));
+        var command = new UpdateProductCommand(id, request.Name, request.Description, request.Price, request.ImageFile, request.Categories);
+        var result = await sender.Send(command);
         return Ok(result.Product);
     }
 
