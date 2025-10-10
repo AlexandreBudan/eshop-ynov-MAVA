@@ -71,7 +71,7 @@ public class BasketsController (ISender sender) : ControllerBase
     /// <returns>An OK result indicating success.</returns>
     [HttpPut("items")]
     [ProducesResponseType(typeof(OkResult), StatusCodes.Status200OK)]
-    public async Task<ActionResult> AddItemToBasket(string userName, [FromBody] ShoppingCartItem item)
+    public async Task<ActionResult> AddItemToBasket([FromRoute] string userName, [FromBody] ShoppingCartItem item)
     {
         var command = new AddItemToBasketCommand(userName, item);
         var result = await sender.Send(command);
