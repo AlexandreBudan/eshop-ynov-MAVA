@@ -53,6 +53,12 @@ public class BasketRepository(IDocumentSession session) : IBasketRepository
         return basket;
     }
 
+    /// <summary>
+    /// Updates an existing shopping cart with new details.
+    /// </summary>
+    /// <param name="basket">The shopping cart instance containing updated details.</param>
+    /// <param name="cancellationToken">Optional. A token to cancel the asynchronous operation.</param>
+    /// <returns>The updated shopping cart instance.</returns>
     public async Task<ShoppingCart> UpdateBasketAsync(ShoppingCart basket, CancellationToken cancellationToken = default)
     {
         session.Update(basket);
