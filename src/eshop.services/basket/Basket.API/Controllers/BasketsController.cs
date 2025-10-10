@@ -1,3 +1,4 @@
+using Basket.API.Features.Baskets.Commands.AddItemToBasket;
 using Basket.API.Features.Baskets.Commands.CreateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasket;
 using Basket.API.Features.Baskets.Queries.GetBasketByUserName;
@@ -58,8 +59,23 @@ public class BasketsController (ISender sender) : ControllerBase
         return Ok(result.IsSuccess);
     }
     
+    /// <summary>
+    /// Adds an item to the user's shopping basket.
+    /// </summary>
+    /// <param name="userName">The username of the user whose basket is being modified.</param>
+    /// <param name="item">The shopping cart item to add.</param>
+    /// <returns>An OK result indicating success.</returns>
+    [HttpPut("items")]
+    [ProducesResponseType(typeof(OkResult), StatusCodes.Status200OK)]
+    public async Task<ActionResult> AddItemToBasket(string userName, [FromBody] ShoppingCartItem item)
+    {
+        var command = new AddItemToBasketCommand(userName, item);
+        var result = await sender.Send(command);
+        return Ok(result);
+    }
+
     // TODO Update basket product quantity
     
-    //TODO Delete item in user basket
+    // TODO Delete item in user basket
     
 }
