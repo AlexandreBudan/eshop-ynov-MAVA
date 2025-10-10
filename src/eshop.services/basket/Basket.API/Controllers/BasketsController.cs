@@ -59,7 +59,7 @@ public class BasketsController (ISender sender) : ControllerBase
         return Ok(result.IsSuccess);
     }
     
-    // TODO Update basket product quantitye
+    // TODO Update basket product quantity
     
     /// <summary>
     /// Deletes an item from the shopping basket for the specified user.
