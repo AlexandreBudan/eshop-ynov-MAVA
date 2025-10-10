@@ -63,6 +63,12 @@ public class BasketsController (ISender sender) : ControllerBase
 
     // TODO Update basket product quantity
 
+    /// <summary>
+    /// Updates an item in the user's shopping basket.
+    /// </summary>
+    /// <param name="userName">The username of the user whose basket is to be updated.</param>
+    /// <param name="body">The request body containing the product ID and quantity.</param>
+    /// <returns>An OK response if the update is successful, or a not-found response if the basket or item does not exist.</returns>
     [HttpPut("items")]
     [ProducesResponseType(typeof(ShoppingCart), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
