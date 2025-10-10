@@ -3,8 +3,10 @@ using Basket.API.Features.Baskets.Commands.DeleteBasket;
 using Basket.API.Features.Baskets.Commands.UpdateBasket;
 using Basket.API.Features.Baskets.Queries.GetBasketByUserName;
 using Basket.API.Models;
+
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Basket.API.Controllers;
 
@@ -64,13 +66,15 @@ public class BasketsController (ISender sender) : ControllerBase
     [HttpPut("items")]
     [ProducesResponseType(typeof(ShoppingCart), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ShoppingCart>> UpdateBasketItem(string userName, [FromBody] UpdateBasketItemRequest request)
+    public async Task<ActionResult<ShoppingCart>> UpdateBasketItem(string userName, [FromBody] JsonDocument body)
     {
-        var result = await sender.Send(new UpdateBasketCommand(userName, request.ProductId, request.Quantity));
+        JsonElement root = body.RootElement;
+        Guid productId = root.GetProperty("productId").GetGuid();
+        int quantity = root.GetProperty("quantity").GetInt32();
+
+        var result = await sender.Send(new UpdateBasketCommand(userName, productId, quantity));
         return Ok(result.Cart);
     }
     
-    
-    //TODO Delete item in user basket
     
 }
