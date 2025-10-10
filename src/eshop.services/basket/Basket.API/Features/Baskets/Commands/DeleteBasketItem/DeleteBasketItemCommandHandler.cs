@@ -18,8 +18,9 @@ public class DeleteBasketItemCommandHandler(IBasketRepository repository)
             items.Remove(itemToRemove);
             basket.Items = items;
             await repository.CreateBasketAsync(basket, cancellationToken);
+            return new DeleteBasketItemResult(true);
         }
 
-        return new DeleteBasketItemResult(true);
+        return new DeleteBasketItemResult(false);
     }
 }
