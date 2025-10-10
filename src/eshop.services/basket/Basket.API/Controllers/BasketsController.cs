@@ -1,10 +1,13 @@
 using Basket.API.Features.Baskets.Commands.CreateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasket;
+using Basket.API.Features.Baskets.Commands.UpdateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasketItem;
 using Basket.API.Features.Baskets.Queries.GetBasketByUserName;
 using Basket.API.Models;
+
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 
 namespace Basket.API.Controllers;
 
@@ -58,8 +61,27 @@ public class BasketsController (ISender sender) : ControllerBase
         var result = await sender.Send(new DeleteBasketCommand(userName));
         return Ok(result.IsSuccess);
     }
-    
+
     // TODO Update basket product quantity
+
+    /// <summary>
+    /// Updates an item in the user's shopping basket.
+    /// </summary>
+    /// <param name="userName">The username of the user whose basket is to be updated.</param>
+    /// <param name="body">The request body containing the product ID and quantity.</param>
+    /// <returns>An OK response if the update is successful, or a not-found response if the basket or item does not exist.</returns>
+    [HttpPut("items")]
+    [ProducesResponseType(typeof(ShoppingCart), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ShoppingCart>> UpdateBasketItem(string userName, [FromBody] JsonDocument body)
+    {
+        JsonElement root = body.RootElement;
+        Guid productId = root.GetProperty("productId").GetGuid();
+        int quantity = root.GetProperty("quantity").GetInt32();
+
+        var result = await sender.Send(new UpdateBasketCommand(userName, productId, quantity));
+        return Ok(result.Cart);
+    }
     
     /// <summary>
     /// Deletes an item from the shopping basket for the specified user.
