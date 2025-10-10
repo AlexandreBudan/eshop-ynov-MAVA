@@ -10,7 +10,10 @@ namespace Basket.API.Data.Repositories;
 /// Provides methods for managing shopping cart data with caching capabilities to improve performance.
 /// Interacts with both a distributed cache and the underlying repository.
 /// </summary>
-public class BasketRepositoryCache(IBasketRepository repository, IDistributedCache cache) : IBasketRepository
+public class BasketRepositoryCache(
+    IBasketRepository repository,
+    IDistributedCache cache,
+    IConfiguration configuration) : IBasketRepository
 {
     /// <summary>
     /// The prefix used as a key identifier for managing shopping cart data in the distributed cache.
@@ -26,6 +29,19 @@ public class BasketRepositoryCache(IBasketRepository repository, IDistributedCac
     /// <param name="userName">The user name associated with the basket data.</param>
     /// <returns>A string that represents a unique cache key for the specified user.</returns>
     private static string GenerateKey(string userName) => $"{PrefixKey}_{userName}";
+
+    /// <summary>
+    /// Gets the cache options with expiration settings from configuration.
+    /// </summary>
+    /// <returns>Distributed cache entry options with sliding expiration configured.</returns>
+    private DistributedCacheEntryOptions GetCacheOptions()
+    {
+        var expirationMinutes = configuration.GetValue<int>("CacheSettings:BasketExpirationInMinutes", 30);
+        return new DistributedCacheEntryOptions
+        {
+            SlidingExpiration = TimeSpan.FromMinutes(expirationMinutes)
+        };
+    }
 
     /// <summary>
     /// Deletes the shopping basket associated with the specified user from the cache and underlying repository.
@@ -44,7 +60,7 @@ public class BasketRepositoryCache(IBasketRepository repository, IDistributedCac
     /// <summary>
     /// Retrieves the shopping basket for the specified user.
     /// If the basket is available in the cache, it is returned directly.
-    /// Otherwise, it is retrieved from the repository, cached, and then returned.
+    /// Otherwise, it is retrieved from the repository, cached with expiration, and then returned.
     /// </summary>
     /// <param name="userName">The user name associated with the basket to be retrieved.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
@@ -57,14 +73,14 @@ public class BasketRepositoryCache(IBasketRepository repository, IDistributedCac
 
         if (cachedBasket != null)
             return cachedBasket;
-            
+
         var basket = await repository.GetBasketByUserNameAsync(userName, cancellationToken);
-        await cache.SetObjectAsync(cacheKey, basket, cancellationToken);
+        await cache.SetObjectAsync(cacheKey, basket, GetCacheOptions(), cancellationToken);
         return basket;
     }
 
     /// <summary>
-    /// Creates a new shopping cart and stores it in the underlying repository and distributed cache.
+    /// Creates a new shopping cart and stores it in the underlying repository and distributed cache with expiration.
     /// </summary>
     /// <param name="basket">The shopping cart to be created.</param>
     /// <param name="cancellationToken">An optional token to monitor for cancellation requests.</param>
@@ -74,7 +90,7 @@ public class BasketRepositoryCache(IBasketRepository repository, IDistributedCac
     {
         var createdBasket = await repository.CreateBasketAsync(basket, cancellationToken);
         var cacheKey = GenerateKey(basket.UserName);
-        await cache.SetObjectAsync(cacheKey, createdBasket, cancellationToken);
+        await cache.SetObjectAsync(cacheKey, createdBasket, GetCacheOptions(), cancellationToken);
         return createdBasket;
     }
 
