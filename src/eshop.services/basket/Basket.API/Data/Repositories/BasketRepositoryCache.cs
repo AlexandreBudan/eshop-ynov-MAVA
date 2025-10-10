@@ -77,4 +77,12 @@ public class BasketRepositoryCache(IBasketRepository repository, IDistributedCac
         await cache.SetObjectAsync(cacheKey, createdBasket, cancellationToken);
         return createdBasket;
     }
+
+    public async Task<ShoppingCart> UpdateBasketAsync(ShoppingCart basket, CancellationToken cancellationToken = default)
+    {
+        var updatedBasket = await repository.UpdateBasketAsync(basket, cancellationToken);
+        var cacheKey = GenerateKey(basket.UserName);
+        await cache.SetObjectAsync(cacheKey, updatedBasket, cancellationToken);
+        return updatedBasket;
+    }
 }

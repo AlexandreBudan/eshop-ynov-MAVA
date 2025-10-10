@@ -1,5 +1,6 @@
 using Basket.API.Features.Baskets.Commands.CreateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasket;
+using Basket.API.Features.Baskets.Commands.UpdateBasket;
 using Basket.API.Features.Baskets.Queries.GetBasketByUserName;
 using Basket.API.Models;
 using MediatR;
@@ -57,8 +58,18 @@ public class BasketsController (ISender sender) : ControllerBase
         var result = await sender.Send(new DeleteBasketCommand(userName));
         return Ok(result.IsSuccess);
     }
-    
+
     // TODO Update basket product quantity
+
+    [HttpPut("items")]
+    [ProducesResponseType(typeof(ShoppingCart), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ShoppingCart>> UpdateBasketItem(string userName, [FromBody] UpdateBasketItemRequest request)
+    {
+        var result = await sender.Send(new UpdateBasketCommand(userName, request.ProductId, request.Quantity));
+        return Ok(result.Cart);
+    }
+    
     
     //TODO Delete item in user basket
     
