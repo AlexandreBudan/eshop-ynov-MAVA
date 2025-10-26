@@ -34,6 +34,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Basket.API", "eshop.service
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Discount.Grpc", "eshop.services\discount\Discount.Grpc\Discount.Grpc.csproj", "{C560CBBD-3514-4EE0-80B0-94547D71C001}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ordering.Domain", "eshop.services\ordering\Ordering.Domain\Ordering.Domain.csproj", "{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ordering.Infrastructure", "eshop.services\ordering\Ordering.Infrastructure\Ordering.Infrastructure.csproj", "{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ordering.Application", "eshop.services\ordering\Ordering.Application\Ordering.Application.csproj", "{F06C436F-6972-4DE5-A505-DE4E5792D3A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildingBlocks.Messaging", "eshop.shared\blocks\BuildingBlocks.Messaging\BuildingBlocks.Messaging.csproj", "{F2DD7A72-47C2-48A7-B923-680865D39EC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Ordering.API", "eshop.services\ordering\Ordering.API\Ordering.API.csproj", "{135619F8-6DE2-4F84-8888-566111FC1DFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -49,6 +59,11 @@ Global
 		{1259ABFA-EC5E-429D-A81F-7993E7CB6E09} = {9311966F-6E39-43C6-808E-58D8B4E19BB8}
 		{E171F86A-5671-418B-9A78-A1C359B3D156} = {24D3782D-E953-4439-A1DE-3A150D0EBF2D}
 		{C560CBBD-3514-4EE0-80B0-94547D71C001} = {1B5C2044-5D35-4E07-B989-7B44194661D1}
+		{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A} = {31888710-69B1-4F62-83DE-C61CFBB12E69}
+		{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84} = {31888710-69B1-4F62-83DE-C61CFBB12E69}
+		{F06C436F-6972-4DE5-A505-DE4E5792D3A8} = {31888710-69B1-4F62-83DE-C61CFBB12E69}
+		{F2DD7A72-47C2-48A7-B923-680865D39EC3} = {9311966F-6E39-43C6-808E-58D8B4E19BB8}
+		{135619F8-6DE2-4F84-8888-566111FC1DFF} = {31888710-69B1-4F62-83DE-C61CFBB12E69}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{545B5213-3E49-4315-B6D7-487DCAF12138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -67,5 +82,25 @@ Global
 		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C560CBBD-3514-4EE0-80B0-94547D71C001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA58876C-718F-4C8A-AA58-D4E51D3DEB6A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B23F90CB-1AB0-45EB-B533-E0A88C5E8F84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F06C436F-6972-4DE5-A505-DE4E5792D3A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F06C436F-6972-4DE5-A505-DE4E5792D3A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F06C436F-6972-4DE5-A505-DE4E5792D3A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F06C436F-6972-4DE5-A505-DE4E5792D3A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2DD7A72-47C2-48A7-B923-680865D39EC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2DD7A72-47C2-48A7-B923-680865D39EC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2DD7A72-47C2-48A7-B923-680865D39EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2DD7A72-47C2-48A7-B923-680865D39EC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{135619F8-6DE2-4F84-8888-566111FC1DFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{135619F8-6DE2-4F84-8888-566111FC1DFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{135619F8-6DE2-4F84-8888-566111FC1DFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{135619F8-6DE2-4F84-8888-566111FC1DFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
