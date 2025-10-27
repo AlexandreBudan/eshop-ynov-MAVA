@@ -17,10 +17,9 @@ var app = builder.Build();
 app.UseApiServices();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    await app.Services.InitialiseDatabaseAsync();
-}
+
+app.MapOpenApi();
+await app.Services.InitialiseDatabaseAsync();
+
 
 app.Run();
