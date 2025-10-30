@@ -11,7 +11,7 @@ namespace Discount.Grpc.Controllers;
 /// REST API Controller for managing discount coupons lifecycle
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/coupons")]
 [Produces("application/json")]
 public class CouponsController : ControllerBase
 {

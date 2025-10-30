@@ -12,7 +12,7 @@ namespace Discount.Grpc.Controllers;
 /// REST API controller for discount application and validation
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/discounts")]
 [Produces("application/json")]
 public class DiscountsController(
     DiscountContext dbContext,
