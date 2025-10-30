@@ -1,4 +1,5 @@
 using Discount.Grpc.Models;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Discount.Grpc.Data;
