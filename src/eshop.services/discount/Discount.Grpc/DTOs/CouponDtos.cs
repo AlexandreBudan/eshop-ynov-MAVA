@@ -28,7 +28,6 @@ public class CreateCouponDto
 /// </summary>
 public class UpdateCouponDto
 {
-    public int Id { get; set; }
     public string? ProductName { get; set; }
     public string? ProductId { get; set; }
     public string? Description { get; set; }
