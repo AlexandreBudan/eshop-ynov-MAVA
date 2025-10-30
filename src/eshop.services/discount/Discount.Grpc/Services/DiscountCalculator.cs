@@ -30,9 +30,10 @@ public class DiscountCalculator
         if (!applicableCoupons.Any())
             return (0, originalPrice, new List<AppliedDiscountInfo>(), "No applicable coupons found");
 
-        // Sort by priority (higher first) and then by type (percentage first for better cumulative effect)
+        // Sort by non-stackable first (so they take priority), then by priority, then by type
         var sortedCoupons = applicableCoupons
-            .OrderByDescending(c => c.Priority)
+            .OrderByDescending(c => !c.IsStackable ? 1 : 0)
+            .ThenByDescending(c => c.Priority)
             .ThenByDescending(c => c.Type == DiscountType.Percentage ? 1 : 0)
             .ToList();
 
