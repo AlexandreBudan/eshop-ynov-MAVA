@@ -9,18 +9,33 @@ var configuration = builder.Configuration;
 
 // Add services to the container.
 builder.Services.AddGrpc();
+builder.Services.AddControllers();
+
+builder.Services.AddScoped<DiscountCalculator>();
 
 builder.Services.AddDbContext<DiscountContext>(options => options.UseSqlite(configuration.GetConnectionString("DiscountConnection")));
+
+// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
 app.UseCustomMigration();
 
 // Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+
+app.MapControllers();
 app.MapGrpcService<DiscountServiceServer>();
 
 app.MapGet("/",
     () =>
-        "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
+        "Discount Service - REST API available at /api/coupons | gRPC service available for client connections");
 
 app.Run();

@@ -42,17 +42,31 @@ public class CreateBasketCommandHandler(IBasketRepository repository, DiscountPr
         {
             try
             {
-                var coupon = await discountProtoServiceClient.GetDiscountAsync(new GetDiscountRequest
+                if (item.OriginalPrice == 0)
+                {
+                    item.OriginalPrice = item.Price;
+                }
+
+                var discountResponse = await discountProtoServiceClient.CalculateDiscountAsync(new CalculateDiscountRequest
                 {
                     ProductName = item.ProductName,
-                    ProductId = item.ProductId.ToString()
+                    ProductId = item.ProductId.ToString(),
+                    OriginalPrice = (double)item.OriginalPrice,
+                    CouponCodes = { item.CouponCodes },
+                    Categories = { item.Categories }
                 }, cancellationToken: cancellationToken);
 
-                item.Price -= (decimal)coupon.Amount;
+                item.TotalDiscount = (decimal)discountResponse.TotalDiscount;
+                item.Price = (decimal)discountResponse.FinalPrice;
+
+                if (discountResponse.HasWarning)
+                {
+                    Console.WriteLine($"Discount warning for {item.ProductName}: {discountResponse.WarningMessage}");
+                }
             }
             catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
             {
-                // No discount found for this product, continue without applying discount
+                item.TotalDiscount = 0;
             }
         }
     }

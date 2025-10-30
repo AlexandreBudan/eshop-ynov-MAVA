@@ -37,6 +37,24 @@ namespace Discount.Grpc.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("PercentageDiscount")
+                        .HasColumnType("REAL");
+
+                    b.Property<string>("CouponCode")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsStackable")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<double>("MaxStackPercentage")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER");
+
                     b.HasKey("Id");
 
                     b.ToTable("Coupon", (string)null);
@@ -48,7 +66,12 @@ namespace Discount.Grpc.Migrations
                             Amount = 150.0,
                             Description = "IPhone X New",
                             ProductName = "IPhone X",
-                            ProductId = ""
+                            ProductId = "",
+                            Type = 0,
+                            PercentageDiscount = 0.0,
+                            IsStackable = true,
+                            MaxStackPercentage = 30.0,
+                            Priority = 0
                         },
                         new
                         {
@@ -56,7 +79,12 @@ namespace Discount.Grpc.Migrations
                             Amount = 100.0,
                             Description = "Samsung 10 New",
                             ProductName = "Samsung 10",
-                            ProductId = ""
+                            ProductId = "",
+                            Type = 0,
+                            PercentageDiscount = 0.0,
+                            IsStackable = true,
+                            MaxStackPercentage = 30.0,
+                            Priority = 0
                         });
                 });
 #pragma warning restore 612, 618

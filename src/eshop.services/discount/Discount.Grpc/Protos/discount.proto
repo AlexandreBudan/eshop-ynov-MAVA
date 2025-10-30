@@ -6,18 +6,21 @@ package discount;
 
 // The discount service definition.
 service DiscountProtoService {
-  
+
   //Discount CRUD opérations
   rpc GetDiscount (GetDiscountRequest) returns (CouponModel);
+  rpc GetDiscountsForProduct (GetDiscountRequest) returns (CouponListModel);
+  rpc CalculateDiscount (CalculateDiscountRequest) returns (CalculateDiscountResponse);
   rpc CreateDiscount (CreateDiscountRequest) returns (CouponModel);
   rpc UpdateDiscount (UpdateDiscountRequest) returns (CouponModel);
   rpc DeleteDiscount (DeleteDiscountRequest) returns (DeleteDiscountResponse);
-  
+
 }
 
 message GetDiscountRequest {
   string productName = 1;
   string productId = 2;
+  string couponCode = 3;
 }
 
 message CouponModel {
@@ -26,6 +29,44 @@ message CouponModel {
   string description = 3;
   double amount = 4;
   string productId = 5;
+  DiscountType type = 6;
+  double percentageDiscount = 7;
+  string couponCode = 8;
+  bool isStackable = 9;
+  double maxStackPercentage = 10;
+  int32 priority = 11;
+}
+
+message CouponListModel {
+  repeated CouponModel coupons = 1;
+}
+
+message CalculateDiscountRequest {
+  string productId = 1;
+  string productName = 2;
+  double originalPrice = 3;
+  repeated string couponCodes = 4;
+  repeated string categories = 5;
+}
+
+message CalculateDiscountResponse {
+  double totalDiscount = 1;
+  double finalPrice = 2;
+  repeated AppliedDiscount appliedDiscounts = 3;
+  bool hasWarning = 4;
+  string warningMessage = 5;
+}
+
+message AppliedDiscount {
+  string description = 1;
+  double discountAmount = 2;
+  DiscountType type = 3;
+}
+
+enum DiscountType {
+  FIXED = 0;
+  PERCENTAGE = 1;
+  COMBINED = 2;
 }
 
 message CreateDiscountRequest {

@@ -52,24 +52,29 @@ public class CatalogServiceServer : CatalogProtoService.CatalogProtoServiceBase
 
         productModel.Categories.AddRange(product.Categories);
 
-        // Try to get discount information
+        // Try to calculate discount information
         try
         {
-            var coupon = await _discountClient.GetDiscountAsync(new GetDiscountRequest
+            var discountResponse = await _discountClient.CalculateDiscountAsync(new CalculateDiscountRequest
             {
                 ProductId = product.Id.ToString(),
-                ProductName = product.Name
+                ProductName = product.Name,
+                OriginalPrice = (double)product.Price,
+                Categories = { product.Categories }
             }, cancellationToken: context.CancellationToken);
 
             productModel.Discount = new DiscountInfo
             {
-                HasDiscount = true,
-                Amount = coupon.Amount,
-                Description = coupon.Description,
-                FinalPrice = (double)(product.Price - (decimal)coupon.Amount)
+                HasDiscount = discountResponse.TotalDiscount > 0,
+                Amount = discountResponse.TotalDiscount,
+                Description = discountResponse.AppliedDiscounts.Count != 0
+                    ? string.Join(", ", discountResponse.AppliedDiscounts.Select(d => d.Description))
+                    : "No discount available",
+                FinalPrice = discountResponse.FinalPrice
             };
 
-            _logger.LogInformation("Discount found for product {ProductName}: {Amount}", product.Name, coupon.Amount);
+            _logger.LogInformation("Discount calculated for product {ProductName}: Total={TotalDiscount}, Final={FinalPrice}",
+                product.Name, discountResponse.TotalDiscount, discountResponse.FinalPrice);
         }
         catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
@@ -116,21 +121,25 @@ public class CatalogServiceServer : CatalogProtoService.CatalogProtoServiceBase
 
             productModel.Categories.AddRange(product.Categories);
 
-            // Try to get discount information for each product
+            // Try to calculate discount information for each product
             try
             {
-                var coupon = await _discountClient.GetDiscountAsync(new GetDiscountRequest
+                var discountResponse = await _discountClient.CalculateDiscountAsync(new CalculateDiscountRequest
                 {
                     ProductId = product.Id.ToString(),
-                    ProductName = product.Name
+                    ProductName = product.Name,
+                    OriginalPrice = (double)product.Price,
+                    Categories = { product.Categories }
                 }, cancellationToken: context.CancellationToken);
 
                 productModel.Discount = new DiscountInfo
                 {
-                    HasDiscount = true,
-                    Amount = coupon.Amount,
-                    Description = coupon.Description,
-                    FinalPrice = (double)(product.Price - (decimal)coupon.Amount)
+                    HasDiscount = discountResponse.TotalDiscount > 0,
+                    Amount = discountResponse.TotalDiscount,
+                    Description = discountResponse.AppliedDiscounts.Any()
+                        ? string.Join(", ", discountResponse.AppliedDiscounts.Select(d => d.Description))
+                        : "No discount available",
+                    FinalPrice = discountResponse.FinalPrice
                 };
             }
             catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)

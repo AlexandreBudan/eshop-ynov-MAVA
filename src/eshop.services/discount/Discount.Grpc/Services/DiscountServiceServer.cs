@@ -16,7 +16,7 @@ namespace Discount.Grpc.Services;
 /// This class uses the DiscountContext for database interactions and ILogger for logging purposes.
 /// It is registered with the gRPC pipeline in the application startup configuration.
 /// </remarks>
-public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountServiceServer> logger) : DiscountProtoService.DiscountProtoServiceBase
+public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountServiceServer> logger, DiscountCalculator calculator) : DiscountProtoService.DiscountProtoServiceBase
 {
     /// <summary>
     /// Retrieves discount details for a given product from the database.
@@ -123,5 +123,86 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
         logger.LogInformation("Discount deleted for {ProductName}", coupon.ProductName);
         
         return new DeleteDiscountResponse(){Success = true};
+    }
+
+    /// <summary>
+    /// Retrieves all applicable discounts for a product (including code-based ones if codes are provided).
+    /// </summary>
+    /// <param name="request">The request containing product information and optional coupon codes.</param>
+    /// <param name="context">The gRPC server call context.</param>
+    /// <returns>Returns a list of applicable coupons.</returns>
+    public override async Task<CouponListModel> GetDiscountsForProduct(GetDiscountRequest request, ServerCallContext context)
+    {
+        logger.LogInformation("Retrieving all discounts for ProductName: {ProductName}, ProductId: {ProductId}",
+            request.ProductName, request.ProductId);
+
+        var query = dbContext.Coupons.AsQueryable();
+
+        // Filter by product
+        query = query.Where(x => x.ProductName == request.ProductName || x.ProductId == request.ProductId);
+
+        var coupons = await query.ToListAsync(context.CancellationToken);
+
+        var couponListModel = new CouponListModel();
+        couponListModel.Coupons.AddRange(coupons.Select(c => c.Adapt<CouponModel>()));
+
+        logger.LogInformation("Retrieved {Count} discounts for product", couponListModel.Coupons.Count);
+
+        return couponListModel;
+    }
+
+    /// <summary>
+    /// Calculates the total discount for a product with business logic for stacking and validation.
+    /// </summary>
+    /// <param name="request">The request containing product information, original price, and optional coupon codes.</param>
+    /// <param name="context">The gRPC server call context.</param>
+    /// <returns>Returns the calculated discount with final price and applied discounts.</returns>
+    public override async Task<CalculateDiscountResponse> CalculateDiscount(CalculateDiscountRequest request, ServerCallContext context)
+    {
+        logger.LogInformation("Calculating discount for ProductName: {ProductName}, ProductId: {ProductId}, Price: {Price}",
+            request.ProductName, request.ProductId, request.OriginalPrice);
+
+        // Get all applicable coupons for this product
+        var query = dbContext.Coupons.AsQueryable();
+        query = query.Where(x => x.ProductName == request.ProductName || x.ProductId == request.ProductId);
+        var coupons = await query.ToListAsync(context.CancellationToken);
+
+        if (!coupons.Any())
+        {
+            logger.LogInformation("No discounts found for product");
+            return new CalculateDiscountResponse
+            {
+                TotalDiscount = 0,
+                FinalPrice = request.OriginalPrice,
+                HasWarning = false
+            };
+        }
+
+        // Use the calculator to compute discounts with business rules
+        var (totalDiscount, finalPrice, appliedDiscounts, warningMessage) =
+            calculator.CalculateDiscount(request.OriginalPrice, coupons, request.CouponCodes?.ToList(), request.Categories?.ToList());
+
+        var response = new CalculateDiscountResponse
+        {
+            TotalDiscount = totalDiscount,
+            FinalPrice = finalPrice,
+            HasWarning = !string.IsNullOrEmpty(warningMessage),
+            WarningMessage = warningMessage ?? string.Empty
+        };
+
+        foreach (var discount in appliedDiscounts)
+        {
+            response.AppliedDiscounts.Add(new AppliedDiscount
+            {
+                Description = discount.Description,
+                DiscountAmount = discount.DiscountAmount,
+                Type = (DiscountType)discount.Type
+            });
+        }
+
+        logger.LogInformation("Calculated discount: Total={TotalDiscount}, Final={FinalPrice}, Applied={Count}",
+            totalDiscount, finalPrice, appliedDiscounts.Count);
+
+        return response;
     }
 }
