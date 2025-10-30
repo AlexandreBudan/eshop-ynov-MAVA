@@ -332,9 +332,8 @@ public class CouponsController : ControllerBase
             return NotFound($"Coupon with ID {id} not found");
         }
 
-        coupon.UpdateStatus(); // Recalculate status based on dates
-        coupon.UpdatedAt = DateTime.UtcNow;
-
+        coupon.Status = CouponStatus.Active;
+        coupon.UpdateStatus();
         await _context.SaveChangesAsync();
 
         _logger.LogInformation("Coupon {Id} enabled successfully with status: {Status}", id, coupon.Status);

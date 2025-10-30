@@ -453,9 +453,36 @@ public class CouponsControllerTests : IDisposable
         // Assert
         var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         var response = okResult.Value.Should().BeOfType<CouponResponseDto>().Subject;
-        // Note: UpdateStatus() doesn't change Disabled status back to Active by design
-        // This is to prevent automatic re-enabling of manually disabled coupons
-        response.Status.Should().Be(CouponStatus.Disabled);
+        // EnableCoupon now properly re-enables the coupon and recalculates status
+        // Since dates are valid, it should become Active
+        response.Status.Should().Be(CouponStatus.Active);
+    }
+
+    [Fact]
+    public async Task EnableCoupon_WithExpiredDates_ShouldSetToExpired()
+    {
+        // Arrange
+        var coupon = new Coupon
+        {
+            ProductName = "Test Product",
+            ProductId = "TEST-001",
+            Type = DiscountType.Percentage,
+            PercentageDiscount = 10,
+            Status = CouponStatus.Disabled,
+            StartDate = DateTime.UtcNow.AddDays(-30),
+            EndDate = DateTime.UtcNow.AddDays(-1) // Already expired
+        };
+        _context.Coupons.Add(coupon);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.EnableCoupon(coupon.Id);
+
+        // Assert
+        var okResult = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        var response = okResult.Value.Should().BeOfType<CouponResponseDto>().Subject;
+        // Even though we tried to enable it, UpdateStatus should detect it's expired
+        response.Status.Should().Be(CouponStatus.Expired);
     }
 
     [Fact]
