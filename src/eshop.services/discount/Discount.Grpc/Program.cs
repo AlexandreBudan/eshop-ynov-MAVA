@@ -78,8 +78,4 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapGrpcService<DiscountServiceServer>();
 
-app.MapGet("/",
-    () =>
-        "Discount Service - REST API: /swagger | Coupon Management: /api/coupons | Discount Application: /api/discounts | gRPC service available");
-
 app.Run();
