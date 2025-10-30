@@ -19,7 +19,7 @@ public static class MigrationExtension
     {
         using var scope = app.ApplicationServices.CreateScope();
         using var dbContext = scope.ServiceProvider.GetRequiredService<DiscountContext>();
-        dbContext.Database.MigrateAsync();
+        dbContext.Database.Migrate();
         
         return app;
     }

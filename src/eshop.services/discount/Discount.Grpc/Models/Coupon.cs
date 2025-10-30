@@ -112,12 +112,12 @@ public class Coupon
     /// <summary>
     /// Date when the coupon was created
     /// </summary>
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime CreatedAt { get; set; }
 
     /// <summary>
     /// Date when the coupon was last updated
     /// </summary>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; }
 
     /// <summary>
     /// Checks if the coupon is currently valid based on dates and status

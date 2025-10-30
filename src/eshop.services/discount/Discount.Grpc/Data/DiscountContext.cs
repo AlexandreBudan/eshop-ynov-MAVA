@@ -18,8 +18,8 @@ public sealed class DiscountContext(DbContextOptions<DiscountContext> options) :
 
         modelBuilder.Entity<Coupon>()
             .HasData([
-                new Coupon {Id = 1, ProductName = "IPhone X", Description = "IPhone X New", Amount = 150.0},
-                new Coupon {Id = 2, ProductName = "Samsung 10", Description = "Samsung 10 New", Amount = 100.0}
+                new Coupon {Id = 1, ProductName = "IPhone X", Description = "IPhone X New", Amount = 150.0, CreatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc)},
+                new Coupon {Id = 2, ProductName = "Samsung 10", Description = "Samsung 10 New", Amount = 100.0, CreatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc)}
             ]);
 
         modelBuilder.Entity<DiscountTier>().ToTable("DiscountTier");
