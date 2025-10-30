@@ -11,6 +11,8 @@ service DiscountProtoService {
   rpc GetDiscount (GetDiscountRequest) returns (CouponModel);
   rpc GetDiscountsForProduct (GetDiscountRequest) returns (CouponListModel);
   rpc CalculateDiscount (CalculateDiscountRequest) returns (CalculateDiscountResponse);
+
+  // ADMIN
   rpc CreateDiscount (CreateDiscountRequest) returns (CouponModel);
   rpc UpdateDiscount (UpdateDiscountRequest) returns (CouponModel);
   rpc DeleteDiscount (DeleteDiscountRequest) returns (DeleteDiscountResponse);
