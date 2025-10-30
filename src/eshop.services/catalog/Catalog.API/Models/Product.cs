@@ -35,4 +35,35 @@ public class Product
     /// Gets or sets the list of categories associated with the product.
     /// </summary>
     public List<string> Categories { get; set; } = [];
+
+    /// <summary>
+    /// Gets or sets the discount information for the product.
+    /// </summary>
+    public ProductDiscount? Discount { get; set; }
+}
+
+/// <summary>
+/// Represents discount information for a product.
+/// </summary>
+public class ProductDiscount
+{
+    /// <summary>
+    /// Gets or sets whether the product has an active discount.
+    /// </summary>
+    public bool HasDiscount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the discount amount.
+    /// </summary>
+    public double Amount { get; set; }
+
+    /// <summary>
+    /// Gets or sets the discount description.
+    /// </summary>
+    public string Description { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the final price after applying the discount.
+    /// </summary>
+    public decimal FinalPrice { get; set; }
 }

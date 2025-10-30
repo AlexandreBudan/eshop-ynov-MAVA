@@ -33,6 +33,10 @@ namespace Discount.Grpc.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ProductId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.HasKey("Id");
 
                     b.ToTable("Coupon", (string)null);
@@ -43,14 +47,16 @@ namespace Discount.Grpc.Migrations
                             Id = 1,
                             Amount = 150.0,
                             Description = "IPhone X New",
-                            ProductName = "IPhone X"
+                            ProductName = "IPhone X",
+                            ProductId = ""
                         },
                         new
                         {
                             Id = 2,
                             Amount = 100.0,
                             Description = "Samsung 10 New",
-                            ProductName = "Samsung 10"
+                            ProductName = "Samsung 10",
+                            ProductId = ""
                         });
                 });
 #pragma warning restore 612, 618

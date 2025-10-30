@@ -31,15 +31,14 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
     /// </exception>
     public override async Task<CouponModel> GetDiscount(GetDiscountRequest request, ServerCallContext context)
     {
-        logger.LogInformation("Retrieving discount for {ProductName}", request.ProductName);
-        
-        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.ProductName);
-        
-        if (coupon == null)
-            throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.ProductName} not found"));
-        
+        logger.LogInformation("Retrieving discount for ProductName: {ProductName}, ProductId: {ProductId}",
+            request.ProductName, request.ProductId);
+
+        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x =>
+            x.ProductName == request.ProductName || x.ProductId == request.ProductId) ?? throw new RpcException(new Status(StatusCode.NotFound,
+                $"Coupon with name {request.ProductName} or id {request.ProductId} not found"));
         logger.LogInformation("Discount retrieved for {ProductName}: {Amount}", coupon.ProductName, coupon.Amount);
-        
+
         return coupon.Adapt<CouponModel>();
     }
 
@@ -86,9 +85,7 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
         logger.LogInformation("Updating discount for {ProductName}", request.Coupon.ProductName);
 
         var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName 
-                                                                      || x.Id == request.Coupon.Id);
-        if(coupon is null)
-            throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
+                                                                      || x.Id == request.Coupon.Id) ?? throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
                                                                    $" or Id {request.Coupon.Id} not found"));
         request.Coupon.Adapt(coupon);
         
@@ -119,9 +116,7 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
         logger.LogInformation("Deleting discount for {ProductName}", request.Coupon.ProductName);
         
         var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName 
-                                                                      || x.Id == request.Coupon.Id);
-        if(coupon is null)
-            throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
+                                                                      || x.Id == request.Coupon.Id) ?? throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
                                                                    $" or Id {request.Coupon.Id} not found"));
         dbContext.Coupons.Remove(coupon);
         await dbContext.SaveChangesAsync();

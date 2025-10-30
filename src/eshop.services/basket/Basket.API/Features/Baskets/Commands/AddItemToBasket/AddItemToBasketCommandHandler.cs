@@ -1,5 +1,7 @@
 using Basket.API.Data.Repositories;
+using Basket.API.Models;
 using BuildingBlocks.CQRS;
+using Discount.Grpc;
 
 namespace Basket.API.Features.Baskets.Commands.AddItemToBasket;
 
@@ -11,7 +13,10 @@ namespace Basket.API.Features.Baskets.Commands.AddItemToBasket;
 /// The updated basket is then persisted using the repository.
 /// </remarks>
 /// <param name="repository">The repository used to access and update basket data.</param>
-public class AddItemToBasketCommandHandler(IBasketRepository repository) : ICommandHandler<AddItemToBasketCommand, AddItemToBasketCommandResult>
+/// <param name="discountProtoServiceClient">The gRPC client for discount service.</param>
+public class AddItemToBasketCommandHandler(
+    IBasketRepository repository,
+    DiscountProtoService.DiscountProtoServiceClient discountProtoServiceClient) : ICommandHandler<AddItemToBasketCommand, AddItemToBasketCommandResult>
 {
     /// <summary>
     /// Handles the `AddItemToBasketCommand`. It retrieves the user's basket, adds the specified item
@@ -31,6 +36,7 @@ public class AddItemToBasketCommandHandler(IBasketRepository repository) : IComm
             item.Quantity += command.CartItem.Quantity;
         } else
         {
+            await ApplyDiscountToItemAsync(command.CartItem, cancellationToken);
             var items = basket.Items.ToList();
             items.Add(command.CartItem);
             basket.Items = items;
@@ -39,5 +45,29 @@ public class AddItemToBasketCommandHandler(IBasketRepository repository) : IComm
         await repository.CreateBasketAsync(basket, cancellationToken);
 
         return new AddItemToBasketCommandResult(basket);
+    }
+
+    /// <summary>
+    /// Applies a discount to a shopping cart item by calling the discount service via gRPC.
+    /// </summary>
+    /// <param name="item">The shopping cart item to apply the discount to.</param>
+    /// <param name="cancellationToken">A token to observe while waiting for the operation to complete.</param>
+    /// <returns>A task that represents the asynchronous operation of applying discount to the item.</returns>
+    private async Task ApplyDiscountToItemAsync(ShoppingCartItem item, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var coupon = await discountProtoServiceClient.GetDiscountAsync(new GetDiscountRequest
+            {
+                ProductName = item.ProductName,
+                ProductId = item.ProductId.ToString()
+            }, cancellationToken: cancellationToken);
+
+            item.Price -= (decimal)coupon.Amount;
+        }
+        catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        {
+            // No discount found for this product, continue without applying discount
+        }
     }
 }

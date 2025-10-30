@@ -40,10 +40,20 @@ public class CreateBasketCommandHandler(IBasketRepository repository, DiscountPr
     {
         foreach (var item in cart.Items)
         {
-            var coupon = await discountProtoServiceClient.GetDiscountAsync(new GetDiscountRequest
-                { ProductName = item.ProductName }, cancellationToken: cancellationToken);
-            
-            item.Price -= (decimal)coupon.Amount;
+            try
+            {
+                var coupon = await discountProtoServiceClient.GetDiscountAsync(new GetDiscountRequest
+                {
+                    ProductName = item.ProductName,
+                    ProductId = item.ProductId.ToString()
+                }, cancellationToken: cancellationToken);
+
+                item.Price -= (decimal)coupon.Amount;
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                // No discount found for this product, continue without applying discount
+            }
         }
     }
 }
