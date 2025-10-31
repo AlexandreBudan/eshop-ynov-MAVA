@@ -21,6 +21,10 @@ public class CreateCouponDto
     public DateTime? EndDate { get; set; }
     public double MinimumPurchaseAmount { get; set; } = 0;
     public int MaxUsageCount { get; set; } = 0;
+    public DiscountScope Scope { get; set; } = DiscountScope.Product;
+    public string? ApplicableCategories { get; set; }
+    public CampaignType CampaignType { get; set; } = CampaignType.None;
+    public bool IsAutomatic { get; set; } = false;
 }
 
 /// <summary>
@@ -43,6 +47,10 @@ public class UpdateCouponDto
     public double? MinimumPurchaseAmount { get; set; }
     public int? MaxUsageCount { get; set; }
     public CouponStatus? Status { get; set; }
+    public DiscountScope? Scope { get; set; }
+    public string? ApplicableCategories { get; set; }
+    public CampaignType? CampaignType { get; set; }
+    public bool? IsAutomatic { get; set; }
 }
 
 /// <summary>
@@ -82,7 +90,7 @@ public class CouponFilterDto
     public string? ProductId { get; set; }
     public string? CouponCode { get; set; }
     public DiscountType? Type { get; set; }
-    public bool? IsActive { get; set; } // Active and not expired
+    public bool? IsActive { get; set; }
     public DateTime? StartDateFrom { get; set; }
     public DateTime? StartDateTo { get; set; }
     public DateTime? EndDateFrom { get; set; }

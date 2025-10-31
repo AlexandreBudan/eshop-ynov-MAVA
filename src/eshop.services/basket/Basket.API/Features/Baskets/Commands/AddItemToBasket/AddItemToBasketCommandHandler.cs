@@ -62,14 +62,16 @@ public class AddItemToBasketCommandHandler(
                 item.OriginalPrice = item.Price;
             }
 
-            var discountResponse = await discountProtoServiceClient.CalculateDiscountAsync(new CalculateDiscountRequest
+            var calculateDiscountRequest = new CalculateDiscountRequest
             {
                 ProductName = item.ProductName,
                 ProductId = item.ProductId.ToString(),
                 OriginalPrice = (double)item.OriginalPrice,
-                CouponCodes = { item.CouponCodes },
-                Categories = { item.Categories }
-            }, cancellationToken: cancellationToken);
+            };
+            calculateDiscountRequest.CouponCodes.AddRange(item.CouponCodes);
+            calculateDiscountRequest.Categories.AddRange(item.Categories);
+
+            var discountResponse = await discountProtoServiceClient.CalculateDiscountAsync(calculateDiscountRequest, cancellationToken: cancellationToken);
 
             item.TotalDiscount = (decimal)discountResponse.TotalDiscount;
             item.Price = (decimal)discountResponse.FinalPrice;

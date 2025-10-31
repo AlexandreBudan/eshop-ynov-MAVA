@@ -246,6 +246,10 @@ public class CouponsController : ControllerBase
         if (updateDto.MinimumPurchaseAmount.HasValue) coupon.MinimumPurchaseAmount = updateDto.MinimumPurchaseAmount.Value;
         if (updateDto.MaxUsageCount.HasValue) coupon.MaxUsageCount = updateDto.MaxUsageCount.Value;
         if (updateDto.Status.HasValue) coupon.Status = updateDto.Status.Value;
+        if (updateDto.Scope.HasValue) coupon.Scope = updateDto.Scope.Value;
+        if (updateDto.ApplicableCategories != null) coupon.ApplicableCategories = updateDto.ApplicableCategories;
+        if (updateDto.CampaignType.HasValue) coupon.CampaignType = updateDto.CampaignType.Value;
+        if (updateDto.IsAutomatic.HasValue) coupon.IsAutomatic = updateDto.IsAutomatic.Value;
 
         coupon.UpdatedAt = DateTime.UtcNow;
         coupon.UpdateStatus(); // Recalculate status based on new data

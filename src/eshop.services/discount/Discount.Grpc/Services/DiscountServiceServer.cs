@@ -57,7 +57,7 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
     {
         if (request.Coupon is null)
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Coupon is null"));
-        
+
         var coupon = request.Coupon.Adapt<Coupon>();
         logger.LogInformation("Creating new discount for {ProductName}", coupon.ProductName);
         await dbContext.Coupons.AddAsync(coupon);
@@ -81,17 +81,17 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
     {
         if (request.Coupon is null)
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Coupon is null"));
-        
+
         logger.LogInformation("Updating discount for {ProductName}", request.Coupon.ProductName);
 
-        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName 
+        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName
                                                                       || x.Id == request.Coupon.Id) ?? throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
                                                                    $" or Id {request.Coupon.Id} not found"));
         request.Coupon.Adapt(coupon);
-        
+
         dbContext.Coupons.Update(coupon);
         await dbContext.SaveChangesAsync();
-        
+
         logger.LogInformation("Discount updated for {ProductName}: {Amount}", coupon.ProductName, coupon.Amount);
         return coupon.Adapt<CouponModel>();
     }
@@ -114,15 +114,15 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Coupon is null"));
 
         logger.LogInformation("Deleting discount for {ProductName}", request.Coupon.ProductName);
-        
-        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName 
+
+        var coupon = await dbContext.Coupons.FirstOrDefaultAsync(x => x.ProductName == request.Coupon.ProductName
                                                                       || x.Id == request.Coupon.Id) ?? throw new RpcException(new Status(StatusCode.NotFound, $"Coupon with name {request.Coupon.ProductName} " +
                                                                    $" or Id {request.Coupon.Id} not found"));
         dbContext.Coupons.Remove(coupon);
         await dbContext.SaveChangesAsync();
         logger.LogInformation("Discount deleted for {ProductName}", coupon.ProductName);
-        
-        return new DeleteDiscountResponse(){Success = true};
+
+        return new DeleteDiscountResponse() { Success = true };
     }
 
     /// <summary>
@@ -136,12 +136,16 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
         logger.LogInformation("Retrieving all discounts for ProductName: {ProductName}, ProductId: {ProductId}",
             request.ProductName, request.ProductId);
 
-        var query = dbContext.Coupons.AsQueryable();
+        var query = dbContext.Coupons.Where(x => x.ProductName == request.ProductName || x.ProductId == request.ProductId || x.Scope == DiscountScope.Category);
 
-        // Filter by product
-        query = query.Where(x => x.ProductName == request.ProductName || x.ProductId == request.ProductId);
-
-        var coupons = await query.ToListAsync(context.CancellationToken);
+        var couponsFromDb = await query.ToListAsync(context.CancellationToken);
+        var coupons = couponsFromDb.Where(c => {
+            if (c.Scope != DiscountScope.Category) {
+                return true;
+            }
+            if (request.Categories == null) return false;
+            return request.Categories.Any(reqCat => c.IsApplicableToCategory(reqCat));
+        }).ToList();
 
         var couponListModel = new CouponListModel();
         couponListModel.Coupons.AddRange(coupons.Select(c => c.Adapt<CouponModel>()));
@@ -167,7 +171,7 @@ public class DiscountServiceServer(DiscountContext dbContext, ILogger<DiscountSe
         query = query.Where(x => x.ProductName == request.ProductName || x.ProductId == request.ProductId);
         var coupons = await query.ToListAsync(context.CancellationToken);
 
-        if (!coupons.Any())
+        if (coupons.Count == 0)
         {
             logger.LogInformation("No discounts found for product");
             return new CalculateDiscountResponse

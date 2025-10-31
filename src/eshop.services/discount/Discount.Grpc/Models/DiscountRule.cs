@@ -1,120 +1,62 @@
 namespace Discount.Grpc.Models;
 
-/// <summary>
-/// Represents a discount tier for progressive discounts based on purchase amount
-/// </summary>
-public class DiscountTier
-{
-    public int Id { get; set; }
-
-    /// <summary>
-    /// The coupon this tier belongs to
-    /// </summary>
-    public int CouponId { get; set; }
-
-    /// <summary>
-    /// Minimum purchase amount for this tier (inclusive)
-    /// </summary>
-    public double MinAmount { get; set; }
-
-    /// <summary>
-    /// Maximum purchase amount for this tier (exclusive, null = no limit)
-    /// </summary>
-    public double? MaxAmount { get; set; }
-
-    /// <summary>
-    /// Discount percentage for this tier
-    /// </summary>
-    public double PercentageDiscount { get; set; }
-
-    /// <summary>
-    /// Fixed discount amount for this tier
-    /// </summary>
-    public double FixedDiscount { get; set; }
-
-    /// <summary>
-    /// Priority order for applying tiers (lower = applied first)
-    /// </summary>
-    public int Order { get; set; }
-
-    /// <summary>
-    /// Checks if a purchase amount falls within this tier
-    /// </summary>
-    public bool IsApplicable(double amount)
-    {
-        if (amount < MinAmount)
-            return false;
-
-        if (MaxAmount.HasValue && amount >= MaxAmount.Value)
-            return false;
-
-        return true;
-    }
-}
-
-/// <summary>
-/// Scope of discount application
-/// </summary>
 public enum DiscountScope
 {
     /// <summary>
-    /// Discount applies to specific products only
+    /// Discount applies to a specific product
     /// </summary>
     Product = 0,
 
     /// <summary>
-    /// Discount applies to entire categories
+    /// Discount applies to a product category
     /// </summary>
     Category = 1,
 
     /// <summary>
-    /// Discount applies to entire cart/basket
+    /// Discount applies to the entire cart
     /// </summary>
     Cart = 2,
 
     /// <summary>
-    /// Discount applies globally to all items
+    /// Global discount for all products
     /// </summary>
     Global = 3
 }
 
-/// <summary>
-/// Type of automatic campaign
-/// </summary>
 public enum CampaignType
 {
     /// <summary>
-    /// No automatic campaign
+    /// No specific campaign
     /// </summary>
     None = 0,
 
     /// <summary>
-    /// Black Friday campaign
+    /// Seasonal campaign (e.g., Black Friday)
     /// </summary>
-    BlackFriday = 1,
+    Seasonal = 1,
 
     /// <summary>
-    /// Seasonal sales
+    /// Flash sale with a limited duration
     /// </summary>
-    SeasonalSales = 2,
+    FlashSale = 2,
 
     /// <summary>
-    /// Flash sale
+    /// Buy-One-Get-One-Free (BOGO)
     /// </summary>
-    FlashSale = 3,
+    BOGO = 3
+}
 
-    /// <summary>
-    /// Holiday special
-    /// </summary>
-    Holiday = 4,
+public class DiscountTier
+{
+    public int Id { get; set; }
+    public int CouponId { get; set; }
+    public double MinAmount { get; set; }
+    public double PercentageDiscount { get; set; }
+    public double FixedDiscount { get; set; }
+    public int Order { get; set; }
 
-    /// <summary>
-    /// Clearance sale
-    /// </summary>
-    Clearance = 5,
-
-    /// <summary>
-    /// Custom campaign
-    /// </summary>
-    Custom = 99
+    public bool IsApplicable(double amount)
+    {
+        return amount >= MinAmount;
+    }
 }

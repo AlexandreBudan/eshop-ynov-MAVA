@@ -55,13 +55,15 @@ public class CatalogServiceServer : CatalogProtoService.CatalogProtoServiceBase
         // Try to calculate discount information
         try
         {
-            var discountResponse = await _discountClient.CalculateDiscountAsync(new CalculateDiscountRequest
+            var calculateDiscountRequest = new CalculateDiscountRequest
             {
                 ProductId = product.Id.ToString(),
                 ProductName = product.Name,
-                OriginalPrice = (double)product.Price,
-                Categories = { product.Categories }
-            }, cancellationToken: context.CancellationToken);
+                OriginalPrice = (double)product.Price
+            };
+            calculateDiscountRequest.Categories.AddRange(product.Categories);
+
+            var discountResponse = await _discountClient.CalculateDiscountAsync(calculateDiscountRequest, cancellationToken: context.CancellationToken);
 
             productModel.Discount = new DiscountInfo
             {
@@ -124,13 +126,15 @@ public class CatalogServiceServer : CatalogProtoService.CatalogProtoServiceBase
             // Try to calculate discount information for each product
             try
             {
-                var discountResponse = await _discountClient.CalculateDiscountAsync(new CalculateDiscountRequest
+                var calculateDiscountRequest = new CalculateDiscountRequest
                 {
                     ProductId = product.Id.ToString(),
                     ProductName = product.Name,
-                    OriginalPrice = (double)product.Price,
-                    Categories = { product.Categories }
-                }, cancellationToken: context.CancellationToken);
+                    OriginalPrice = (double)product.Price
+                };
+                calculateDiscountRequest.Categories.AddRange(product.Categories);
+
+                var discountResponse = await _discountClient.CalculateDiscountAsync(calculateDiscountRequest, cancellationToken: context.CancellationToken);
 
                 productModel.Discount = new DiscountInfo
                 {

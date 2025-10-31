@@ -23,6 +23,7 @@ message GetDiscountRequest {
   string productName = 1;
   string productId = 2;
   string couponCode = 3;
+  repeated string categories = 4;
 }
 
 message CouponModel {
