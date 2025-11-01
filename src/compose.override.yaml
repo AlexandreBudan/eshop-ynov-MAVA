@@ -173,3 +173,12 @@
       - EmailSettings__SmtpUsername=
       - EmailSettings__SmtpPassword=
       - EmailSettings__EnableSsl=false
+
+        
+  ### API Gateway ###    
+
+  yarpapigateway:
+    ports:
+      - "6064:${GATEWAY_API_PORT}" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${GATEWAY_API_PORT}

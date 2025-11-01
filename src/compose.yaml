@@ -144,6 +144,32 @@
       mailpit:
         condition: service_started
         required: false
+        
+  ### API Gateway ###    
+  
+  yarpapigateway:
+    image: yarpapigateway
+    container_name: yarpapigateway
+    build:
+      context: .
+      dockerfile: eshop.gateway/YarpApiGateway/Dockerfile
+    networks:
+      - ordering_network
+      - basket_network
+      - catalog_network
+    depends_on:
+      ordering.api:
+        condition: service_started
+        required: true
+        restart: true
+      basket.api:
+        condition: service_started
+        required: true
+        restart: true
+      catalog.api:
+        condition: service_started
+        required: true
+        restart: true
 
 ### Shared infrastructure ###
 volumes:
