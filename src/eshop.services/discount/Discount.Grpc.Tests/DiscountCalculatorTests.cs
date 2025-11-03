@@ -610,7 +610,7 @@ public class DiscountCalculatorTests
         };
 
         // Act
-        var (totalDiscount, finalPrice, appliedDiscounts, warningMessage) =
+        var (totalDiscount, finalPrice, _, warningMessage) =
             _calculator.CalculateDiscount(originalPrice, coupons);
 
         // Assert
