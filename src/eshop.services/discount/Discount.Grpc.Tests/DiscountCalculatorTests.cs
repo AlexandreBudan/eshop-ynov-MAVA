@@ -537,7 +537,7 @@ public class DiscountCalculatorTests
         };
 
         // Act - No coupon codes provided
-        var (totalDiscount, finalPrice, appliedDiscounts, warningMessage) =
+        var (totalDiscount, finalPrice, appliedDiscounts, _) =
             _calculator.CalculateDiscount(originalPrice, coupons);
 
         // Assert
