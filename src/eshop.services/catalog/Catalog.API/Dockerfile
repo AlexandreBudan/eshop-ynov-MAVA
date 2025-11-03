@@ -10,7 +10,7 @@ COPY ["eshop.services/catalog/Catalog.API/Catalog.API.csproj", "eshop.services/c
 RUN dotnet restore "eshop.services/catalog/Catalog.API/Catalog.API.csproj"
 COPY . .
 WORKDIR "/src/eshop.services/catalog/Catalog.API"
-RUN dotnet build "./Catalog.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN apt-get update && apt-get install -y protobuf-compiler && dotnet build "./Catalog.API.csproj" -c $BUILD_CONFIGURATION -o /app/build /p:Protobuf_ProtocFullPath=`which protoc`
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
