@@ -1,6 +1,8 @@
 using BuildingBlocks.Behaviors;
 using BuildingBlocks.Middlewares;
 using Catalog.API.Data;
+using Catalog.API.Services;
+using Discount.Grpc;
 using FluentValidation;
 using HealthChecks.UI.Client;
 using Marten;
@@ -11,6 +13,21 @@ var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 
 // Add services to the container.
+builder.Services.AddGrpc();
+builder.Services.AddGrpcClient<DiscountProtoService.DiscountProtoServiceClient>(options =>
+{
+    options.Address = new Uri(configuration.GetValue<string>("GrpcSettings:DiscountUrl") ?? string.Empty);
+}).ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var handler = new HttpClientHandler();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        handler.ServerCertificateCustomValidationCallback =
+            HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+    }
+    return handler;
+});
 
 builder.Services.AddControllers();
 
@@ -56,6 +73,13 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map gRPC service
+app.MapGrpcService<CatalogServiceServer>();
+
+app.MapGet("/grpc",
+    () =>
+        "Communication with gRPC endpoints must be made through a gRPC client. To learn how to create a client, visit: https://go.microsoft.com/fwlink/?linkid=2086909");
 
 // Global Exception
 app.UseMiddleware<ExceptionHandlerMiddleware>();

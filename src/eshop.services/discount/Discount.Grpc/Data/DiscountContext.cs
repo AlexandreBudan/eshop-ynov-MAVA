@@ -1,0 +1,28 @@
+using Discount.Grpc.Models;
+
+using Microsoft.EntityFrameworkCore;
+
+namespace Discount.Grpc.Data;
+
+public sealed class DiscountContext(DbContextOptions<DiscountContext> options) : DbContext(options)
+{
+    public DbSet<Coupon> Coupons { get; set; }
+    public DbSet<DiscountTier> DiscountTiers { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Coupon>().ToTable("Coupon")
+            .HasMany(c => c.Tiers)
+            .WithOne()
+            .HasForeignKey(t => t.CouponId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Coupon>()
+            .HasData([
+                new Coupon {Id = 1, ProductName = "IPhone X", Description = "IPhone X New", Amount = 150.0, CreatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc)},
+                new Coupon {Id = 2, ProductName = "Samsung 10", Description = "Samsung 10 New", Amount = 100.0, CreatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc), UpdatedAt = new DateTime(2025, 10, 30, 0, 0, 0, DateTimeKind.Utc)}
+            ]);
+
+        modelBuilder.Entity<DiscountTier>().ToTable("DiscountTier");
+    }
+}

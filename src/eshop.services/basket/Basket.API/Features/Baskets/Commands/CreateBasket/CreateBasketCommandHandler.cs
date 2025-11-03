@@ -1,6 +1,7 @@
 using Basket.API.Data.Repositories;
 using Basket.API.Models;
 using BuildingBlocks.CQRS;
+using Discount.Grpc;
 
 namespace Basket.API.Features.Baskets.Commands.CreateBasket;
 
@@ -8,7 +9,7 @@ namespace Basket.API.Features.Baskets.Commands.CreateBasket;
 /// Handles the creation of a shopping basket by processing the CreateBasketCommand.
 /// Implements the <see cref="ICommandHandler{CreateBasketCommand, CreateBasketCommandResult}"/> interface.
 /// </summary>
-public class CreateBasketCommandHandler(IBasketRepository repository) : ICommandHandler<CreateBasketCommand, CreateBasketCommandResult>
+public class CreateBasketCommandHandler(IBasketRepository repository, DiscountProtoService.DiscountProtoServiceClient discountProtoServiceClient) : ICommandHandler<CreateBasketCommand, CreateBasketCommandResult>
 {
     /// <summary>
     /// Handles the request to create a shopping basket.
@@ -39,9 +40,36 @@ public class CreateBasketCommandHandler(IBasketRepository repository) : ICommand
     {
         foreach (var item in cart.Items)
         {
-            // TODO in the futur by applying discount on all product
-            
-            item.Price -= 0;
+            try
+            {
+                if (item.OriginalPrice == 0)
+                {
+                    item.OriginalPrice = item.Price;
+                }
+
+                var calculateDiscountRequest = new CalculateDiscountRequest
+                {
+                    ProductName = item.ProductName,
+                    ProductId = item.ProductId.ToString(),
+                    OriginalPrice = (double)item.OriginalPrice,
+                };
+                calculateDiscountRequest.CouponCodes.AddRange(item.CouponCodes);
+                calculateDiscountRequest.Categories.AddRange(item.Categories);
+
+                var discountResponse = await discountProtoServiceClient.CalculateDiscountAsync(calculateDiscountRequest, cancellationToken: cancellationToken);
+
+                item.TotalDiscount = (decimal)discountResponse.TotalDiscount;
+                item.Price = (decimal)discountResponse.FinalPrice;
+
+                if (discountResponse.HasWarning)
+                {
+                    Console.WriteLine($"Discount warning for {item.ProductName}: {discountResponse.WarningMessage}");
+                }
+            }
+            catch (Grpc.Core.RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+            {
+                item.TotalDiscount = 0;
+            }
         }
     }
 }

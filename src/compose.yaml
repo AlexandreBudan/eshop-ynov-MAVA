@@ -53,6 +53,18 @@
         condition: service_healthy
         required: true
         restart: true
+        
+  ### Service Discount ###
+  discount.grpc:
+    image: discount.grpc
+    container_name: discount_grpc
+    restart: always
+    build:
+      context: .
+      dockerfile: eshop.services/discount/Discount.Grpc/Dockerfile
+    networks:
+      - discount_network
+      - basket_network
 
 ### Shared infrastructure ###
 volumes:
@@ -62,6 +74,8 @@ volumes:
     name: basket_data
   redis_data:
     name: redis_data
+  ordering_data:
+    name: ordering_data
 
 
 networks:
@@ -69,6 +83,7 @@ networks:
     name: catalog_network
   basket_network:
     name: basket_network 
-
+  discount_network:
+    name: discount_network
 
 
