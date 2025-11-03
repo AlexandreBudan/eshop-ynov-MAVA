@@ -2,6 +2,8 @@ using BuildingBlocks.CQRS;
 using Catalog.API.Exceptions;
 using Catalog.API.Models;
 using Marten;
+using Discount.Grpc;
+using Grpc.Core;
 
 namespace Catalog.API.Features.Products.Queries.GetProductById;
 
@@ -15,7 +17,7 @@ namespace Catalog.API.Features.Products.Queries.GetProductById;
 /// a <see cref="ProductNotFoundException"/> is thrown. It utilizes a logger to log
 /// the status and outcome of the operation.
 /// </remarks>
-public class GetProductByIdQueryHandler(IDocumentSession documentSession) 
+public class GetProductByIdQueryHandler(IDocumentSession documentSession, DiscountProtoService.DiscountProtoServiceClient discountService)
     : IQueryHandler<GetProductByIdQuery, GetProductByIdQueryResult>
 {
     /// <summary>
@@ -33,7 +35,40 @@ public class GetProductByIdQueryHandler(IDocumentSession documentSession)
         {
             throw new ProductNotFoundException(request.Id);
         }
-        
+
+        try
+        {
+            var discountRequest = new CalculateDiscountRequest
+            {
+                ProductId = product.Id.ToString(),
+                ProductName = product.Name,
+                OriginalPrice = (double)product.Price,
+                Categories = { product.Categories }
+            };
+
+            var discountResponse = await discountService.CalculateDiscountAsync(discountRequest, cancellationToken: cancellationToken);
+
+            product.Discount = new ProductDiscount
+            {
+                HasDiscount = discountResponse.TotalDiscount > 0,
+                Amount = discountResponse.TotalDiscount,
+                Description = discountResponse.WarningMessage,
+                FinalPrice = (decimal)discountResponse.FinalPrice
+            };
+            product.Price = (decimal)discountResponse.FinalPrice;
+        }
+        catch (RpcException ex)
+        {
+            product.Discount = new ProductDiscount
+            {
+                HasDiscount = false,
+                Amount = 0,
+                Description = "Discount service unavailable",
+                FinalPrice = product.Price
+            };
+            Console.WriteLine($"Error calling Discount service for product {product.Name}: {ex.Message}");
+        }
+
         return new GetProductByIdQueryResult(product);
     }
 }
