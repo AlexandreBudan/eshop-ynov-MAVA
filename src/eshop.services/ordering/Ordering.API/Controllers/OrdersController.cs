@@ -27,7 +27,7 @@ public class OrdersController(ISender sender) : ControllerBase
     /// </summary>
     /// <param name="orderId">The unique identifier of the order to retrieve.</param>
     /// <returns>An <see cref="OrderDto"/> object representing the order details.</returns>
-    [HttpGet("id/{orderId:guid}")]
+    [HttpGet("{orderId:guid}")]
     [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<OrderDto>> GetOrderById(Guid orderId)
