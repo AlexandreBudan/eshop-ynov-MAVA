@@ -10,7 +10,7 @@ COPY ["eshop.services/basket/Basket.API/Basket.API.csproj", "eshop.services/bask
 RUN dotnet restore "eshop.services/basket/Basket.API/Basket.API.csproj"
 COPY . .
 WORKDIR "/src/eshop.services/basket/Basket.API"
-RUN dotnet build "./Basket.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN apt-get update && apt-get install -y protobuf-compiler && dotnet build "./Basket.API.csproj" -c $BUILD_CONFIGURATION -o /app/build /p:Protobuf_ProtocFullPath=`which protoc`
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release

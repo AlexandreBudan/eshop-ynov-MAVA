@@ -15,7 +15,7 @@ COPY ["eshop.services/ordering/Ordering.Infrastructure/Ordering.Infrastructure.c
 RUN dotnet restore "eshop.services/ordering/Ordering.API/Ordering.API.csproj"
 COPY . .
 WORKDIR "/src/eshop.services/ordering/Ordering.API"
-RUN dotnet build "./Ordering.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN apt-get update && apt-get install -y protobuf-compiler && dotnet build "./Ordering.API.csproj" -c $BUILD_CONFIGURATION -o /app/build /p:Protobuf_ProtocFullPath=`which protoc`
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
