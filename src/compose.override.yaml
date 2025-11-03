@@ -44,10 +44,10 @@
 
   catalog.api:
     ports:
-      - "6060:${CATALOG_API_PORT}" #http
+      - "6060:6060" # REST API (HTTP/1.1)
+      - "6006:6006" # gRPC (HTTP/2)
     environment:
-      - ASPNETCORE_HTTP_PORTS=${CATALOG_API_PORT}
-      - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=${CATALOG_POSTGRES_PORT};Database=${CATALOG_POSTGRES_DB};Username=${CATALOG_POSTGRES_USER};Password=${CATALOG_POSTGRES_PASSWORD}
+      - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=5432;Database=CatalogDb;Username=CatalogAdmin;Password=Pass1234!
 
   ### Service Basket ###
 
@@ -100,11 +100,12 @@
 
   discount.grpc:
     ports:
-      - "6062:${DISCOUNT_API_PORT}"
+      - "6062:6062" # REST API (HTTP/1.1)
+      - "6026:6026" # gRPC (HTTP/2)
     volumes:
       - ./eshop.services/discount/data:/app/data
     environment:
-      - ASPNETCORE_HTTP_PORTS=${DISCOUNT_API_PORT}
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DiscountConnection=Data Source=data/discountDatabase
 
   ### Service Ordering ###
@@ -138,4 +139,4 @@
       - MessageBroker__UserName=${RABBITMQ_USER}
       - MessageBroker__Password=${RABBITMQ_PASSWORD}
       - FeatureManagement__OrderFulfilment=false
-      - GrpcSettings__CatalogUrl=http://catalog.api:6060
+      - GrpcSettings__CatalogUrl=http://catalog.api:6006

@@ -24,6 +24,7 @@
       dockerfile: eShop.Services/Catalog/Catalog.API/Dockerfile
     networks:
       - catalog_network
+      - discount_network
     depends_on:
       catalog.database:
         condition: service_healthy

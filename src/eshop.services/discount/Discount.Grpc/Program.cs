@@ -2,10 +2,30 @@ using System.Reflection;
 using Discount.Grpc.Data;
 using Discount.Grpc.Data.Extensions;
 using Discount.Grpc.Services;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
+// Enable HTTP/2 without TLS for gRPC in development (h2c protocol)
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel with separate endpoints for HTTP/1.1 (REST) and HTTP/2 (gRPC)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Port 6062: REST API with HTTP/1.1
+    options.ListenAnyIP(6062, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1;
+    });
+
+    // Port 6026: gRPC with HTTP/2 (without TLS for dev)
+    options.ListenAnyIP(6026, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http2;
+    });
+});
 
 var configuration = builder.Configuration;
 

@@ -77,7 +77,17 @@ public static class OrderMapperExtensions
                 order.Payment.CVV, order.Payment.PaymentMethod),
             OrderStatus: order.OrderStatus,
             OrderItems: order.OrderItems.Select(oi =>
-                new OrderItemDto(oi.OrderId.Value, oi.ProductId.Value, oi.Quantity, oi.Price)).ToList()
+                new OrderItemDto(
+                    OrderId: oi.OrderId.Value,
+                    ProductId: oi.ProductId.Value,
+                    Quantity: oi.Quantity,
+                    Price: oi.Price,
+                    ProductName: oi.ProductName,
+                    ProductDescription: oi.ProductDescription,
+                    ImageFile: oi.ImageFile,
+                    DiscountAmount: oi.DiscountAmount,
+                    FinalPrice: oi.FinalPrice
+                )).ToList()
         );
     }
     

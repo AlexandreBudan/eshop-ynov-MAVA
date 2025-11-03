@@ -7,8 +7,28 @@ using FluentValidation;
 using HealthChecks.UI.Client;
 using Marten;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+
+// Enable HTTP/2 without TLS for gRPC in development (h2c protocol)
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Kestrel with separate endpoints for HTTP/1.1 (REST) and HTTP/2 (gRPC)
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Port 6060: REST API with HTTP/1.1
+    options.ListenAnyIP(6060, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1;
+    });
+
+    // Port 6006: gRPC with HTTP/2 (without TLS for dev)
+    options.ListenAnyIP(6006, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http2;
+    });
+});
 
 var configuration = builder.Configuration;
 

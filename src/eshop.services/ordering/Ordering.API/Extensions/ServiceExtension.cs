@@ -34,6 +34,15 @@ public static class ServiceExtension
         services.AddGrpcClient<CatalogProtoService.CatalogProtoServiceClient>(options =>
         {
             options.Address = new Uri(catalogUrl);
+        })
+        .ConfigurePrimaryHttpMessageHandler(() =>
+        {
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback =
+                    HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+            return handler;
         });
 
         services.AddScoped<ICatalogService, CatalogService>();

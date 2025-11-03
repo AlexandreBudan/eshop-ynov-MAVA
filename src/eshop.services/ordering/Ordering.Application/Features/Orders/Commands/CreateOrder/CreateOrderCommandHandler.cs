@@ -24,43 +24,59 @@ public class CreateOrderCommandHandler(
             request.Order.CustomerId, request.Order.OrderItems.Count);
 
         var productIds = request.Order.OrderItems.Select(i => i.ProductId.ToString()).ToList();
-        var productsAvailable = await catalogService.ValidateProductsAvailabilityAsync(productIds, cancellationToken);
-
-        if (!productsAvailable)
+        try
         {
-            logger.LogWarning("Some products are not available in catalog for order creation");
-            throw new BadRequestException("One or more products are not available. Please check your cart.");
-        }
+            var productsAvailable = await catalogService.ValidateProductsAvailabilityAsync(productIds, cancellationToken);
 
-        logger.LogInformation("All products validated successfully from Catalog.API");
+            if (!productsAvailable)
+            {
+                logger.LogWarning("Some products are not available in catalog. Proceeding anyway for resilience.");
+            }
+            else
+            {
+                logger.LogInformation("All products validated successfully from Catalog.API");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Failed to validate products with Catalog service. Proceeding without validation for resilience.");
+        }
 
         var enrichedOrderItems = new List<Ordering.Application.Features.Orders.Dtos.OrderItemDto>();
         foreach (var item in request.Order.OrderItems)
         {
-            var productInfo = await catalogService.GetProductAsync(item.ProductId.ToString(), cancellationToken);
-
-            if (productInfo != null)
+            try
             {
-                var enrichedItem = new Ordering.Application.Features.Orders.Dtos.OrderItemDto(
-                    OrderId: item.OrderId,
-                    ProductId: item.ProductId,
-                    Quantity: item.Quantity,
-                    Price: productInfo.FinalPrice,
-                    ProductName: productInfo.Name,
-                    ProductDescription: productInfo.Description,
-                    ImageFile: productInfo.ImageFile,
-                    DiscountAmount: productInfo.HasDiscount ? productInfo.DiscountAmount : null,
-                    FinalPrice: productInfo.FinalPrice
-                );
+                var productInfo = await catalogService.GetProductAsync(item.ProductId.ToString(), cancellationToken);
 
-                enrichedOrderItems.Add(enrichedItem);
-                logger.LogInformation("Enriched order item for product {ProductId}: {ProductName} - Price: {Price} (Discount: {Discount})",
-                    productInfo.Id, productInfo.Name, productInfo.FinalPrice, productInfo.DiscountAmount);
+                if (productInfo != null)
+                {
+                    var enrichedItem = new Ordering.Application.Features.Orders.Dtos.OrderItemDto(
+                        OrderId: item.OrderId,
+                        ProductId: item.ProductId,
+                        Quantity: item.Quantity,
+                        Price: productInfo.FinalPrice,
+                        ProductName: productInfo.Name,
+                        ProductDescription: productInfo.Description,
+                        ImageFile: productInfo.ImageFile,
+                        DiscountAmount: productInfo.HasDiscount ? productInfo.DiscountAmount : null,
+                        FinalPrice: productInfo.FinalPrice
+                    );
+
+                    enrichedOrderItems.Add(enrichedItem);
+                    logger.LogInformation("Enriched order item for product {ProductId}: {ProductName} - Price: {Price} (Discount: {Discount})",
+                        productInfo.Id, productInfo.Name, productInfo.FinalPrice, productInfo.DiscountAmount);
+                }
+                else
+                {
+                    enrichedOrderItems.Add(item);
+                    logger.LogWarning("Could not enrich product {ProductId}, using original data", item.ProductId);
+                }
             }
-            else
+            catch (Exception ex)
             {
+                logger.LogWarning(ex, "Failed to fetch product details for {ProductId}, using original data", item.ProductId);
                 enrichedOrderItems.Add(item);
-                logger.LogWarning("Could not enrich product {ProductId}, using original data", item.ProductId);
             }
         }
 

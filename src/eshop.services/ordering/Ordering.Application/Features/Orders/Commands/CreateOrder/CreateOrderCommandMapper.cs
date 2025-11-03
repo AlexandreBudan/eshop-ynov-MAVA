@@ -21,12 +21,21 @@ public static class CreateOrderCommandMapper
         var payment = Payment.Of(requestOrder.Payment.CardName, requestOrder.Payment.CardNumber, requestOrder.Payment.Expiration, requestOrder.Payment.Cvv, requestOrder.Payment.PaymentMethod);
        
         var order = Order.Create(customerId: CustomerId.Of(requestOrder.CustomerId), orderName : OrderName.Of(requestOrder.OrderName), shippingAddress: shippingAddress, billingAddress: billingAddress, payment: payment);
-       
+
         foreach (var orderItem in requestOrder.OrderItems)
         {
-            order.AddOrderItem(ProductId.Of(orderItem.ProductId), orderItem.Quantity, orderItem.Price);
+            order.AddOrderItem(
+                productId: ProductId.Of(orderItem.ProductId),
+                quantity: orderItem.Quantity,
+                price: orderItem.Price,
+                productName: orderItem.ProductName,
+                productDescription: orderItem.ProductDescription,
+                imageFile: orderItem.ImageFile,
+                discountAmount: orderItem.DiscountAmount,
+                finalPrice: orderItem.FinalPrice
+            );
         }
-       
+
         return order;
     }
 }

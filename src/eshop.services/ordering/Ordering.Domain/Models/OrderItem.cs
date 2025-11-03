@@ -17,12 +17,29 @@ public class OrderItem : Entity<OrderItemId>
 
     public int Quantity { get; set; }
 
-    internal OrderItem(ProductId productId, OrderId orderId, decimal price, int quantity)
+    public string? ProductName { get; set; }
+
+    public string? ProductDescription { get; set; }
+
+    public string? ImageFile { get; set; }
+
+    public decimal? DiscountAmount { get; set; }
+
+    public decimal? FinalPrice { get; set; }
+
+    internal OrderItem(ProductId productId, OrderId orderId, decimal price, int quantity,
+        string? productName = null, string? productDescription = null, string? imageFile = null,
+        decimal? discountAmount = null, decimal? finalPrice = null)
     {
         Id = OrderItemId.Of(Guid.NewGuid());
         ProductId = productId;
         OrderId = orderId;
         Price = price;
         Quantity = quantity;
+        ProductName = productName;
+        ProductDescription = productDescription;
+        ImageFile = imageFile;
+        DiscountAmount = discountAmount;
+        FinalPrice = finalPrice;
     }
 }

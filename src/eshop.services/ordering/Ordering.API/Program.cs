@@ -3,6 +3,8 @@ using Ordering.Application.Extensions;
 using Ordering.Infrastructure;
 using Ordering.Infrastructure.Data.Extensions;
 
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
 

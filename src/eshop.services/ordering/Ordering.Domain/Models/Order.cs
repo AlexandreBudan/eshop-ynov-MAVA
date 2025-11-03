@@ -42,12 +42,19 @@ public class Order : Aggregate<OrderId>
     /// <param name="productId">The unique identifier of the product to be added to the order.</param>
     /// <param name="quantity">The quantity of the product to be added. Must be greater than zero.</param>
     /// <param name="price">The price per unit of the product to be added. Must be greater than zero.</param>
-    public void AddOrderItem(ProductId productId, int quantity, decimal price)
+    /// <param name="productName">The name of the product (enriched from Catalog service).</param>
+    /// <param name="productDescription">The description of the product (enriched from Catalog service).</param>
+    /// <param name="imageFile">The image file path of the product (enriched from Catalog service).</param>
+    /// <param name="discountAmount">The discount amount applied to the product (enriched from Discount service).</param>
+    /// <param name="finalPrice">The final price after discount (enriched from Discount service).</param>
+    public void AddOrderItem(ProductId productId, int quantity, decimal price,
+        string? productName = null, string? productDescription = null, string? imageFile = null,
+        decimal? discountAmount = null, decimal? finalPrice = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(quantity, "Quantity must be greater than 0");
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(price, "Price must be greater than 0");
-        
-        _orderItems.Add(new OrderItem(productId, Id, price, quantity));
+
+        _orderItems.Add(new OrderItem(productId, Id, price, quantity, productName, productDescription, imageFile, discountAmount, finalPrice));
     }
 
     /// <summary>

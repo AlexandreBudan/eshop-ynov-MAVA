@@ -79,13 +79,18 @@ public class OrdersController(ISender sender) : ControllerBase
     /// Creates a new order based on the provided order details.
     /// </summary>
     /// <param name="order">The <see cref="OrderDto"/> containing details of the order to be created.</param>
-    /// <returns>The unique identifier of the newly created order.</returns>
+    /// <returns>The created order with HTTP 201 status.</returns>
     [HttpPost]
-    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
-    public async Task<ActionResult<Guid>> CreateOrder([FromBody] OrderDto order)
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<OrderDto>> CreateOrder([FromBody] OrderDto order)
     {
         var result = await sender.Send(new CreateOrderCommand(order));
-        return Ok(result.NewOrderId);
+
+        // Retrieve the created order to return the full object
+        var createdOrder = await sender.Send(new GetOrderByIdQuery(result.NewOrderId));
+
+        return CreatedAtAction(nameof(GetOrderById), new { orderId = result.NewOrderId }, createdOrder);
     }
 
     /// <summary>
