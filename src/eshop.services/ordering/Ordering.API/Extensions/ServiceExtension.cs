@@ -2,6 +2,8 @@ using BuildingBlocks.Middlewares;
 using Catalog.Grpc;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Ordering.API.Services;
+using Ordering.Application.Services;
 
 namespace Ordering.API.Extensions;
 
@@ -34,6 +36,7 @@ public static class ServiceExtension
             options.Address = new Uri(catalogUrl);
         });
 
+        services.AddScoped<ICatalogService, CatalogService>();
         return services;
     }
 

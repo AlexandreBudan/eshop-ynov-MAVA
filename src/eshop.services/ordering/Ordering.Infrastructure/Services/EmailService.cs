@@ -72,14 +72,30 @@ public class EmailService : IEmailService
     private string BuildOrderConfirmationEmailBody(OrderDto order)
     {
         var itemsHtml = string.Join("", order.OrderItems.Select(item =>
-            $@"<tr>
-                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>Product {item.ProductId}</td>
-                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>{item.Quantity}</td>
-                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>${item.Price:F2}</td>
-                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>${(item.Quantity * item.Price):F2}</td>
-            </tr>"));
+        {
+            var productName = !string.IsNullOrEmpty(item.ProductName) ? item.ProductName : $"Product {item.ProductId}";
+            var hasDiscount = item.DiscountAmount.HasValue && item.DiscountAmount.Value > 0;
+            var itemPrice = item.FinalPrice ?? item.Price;
+            var itemSubtotal = item.Quantity * itemPrice;
 
-        var totalPrice = order.OrderItems.Sum(item => item.Quantity * item.Price);
+            var discountBadge = hasDiscount
+                ? $"<span style='color: #4CAF50; font-weight: bold;'>-${item.DiscountAmount:F2} discount</span>"
+                : "";
+
+            return $@"<tr>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd;'>
+                    <strong>{productName}</strong><br>
+                    {(hasDiscount ? $"<small style='color: #666;'>{discountBadge}</small>" : "")}
+                </td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: center;'>{item.Quantity}</td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: right;'>${itemPrice:F2}</td>
+                <td style='padding: 8px; border-bottom: 1px solid #ddd; text-align: right;'><strong>${itemSubtotal:F2}</strong></td>
+            </tr>";
+        }));
+
+        var totalPrice = order.OrderItems.Sum(item => item.Quantity * (item.FinalPrice ?? item.Price));
+        var totalDiscount = order.OrderItems.Sum(item => item.DiscountAmount ?? 0);
+        var hasAnyDiscount = totalDiscount > 0;
 
         return $@"
 <!DOCTYPE html>
@@ -122,10 +138,10 @@ public class EmailService : IEmailService
             <table>
                 <thead>
                     <tr>
-                        <th>Product</th>
-                        <th>Quantity</th>
-                        <th>Price</th>
-                        <th>Total</th>
+                        <th style='text-align: left;'>Product</th>
+                        <th style='text-align: center;'>Quantity</th>
+                        <th style='text-align: right;'>Unit Price</th>
+                        <th style='text-align: right;'>Subtotal</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -133,8 +149,14 @@ public class EmailService : IEmailService
                 </tbody>
             </table>
 
+            {(hasAnyDiscount ? $@"
+            <div style='text-align: right; padding: 10px 0; color: #4CAF50; font-size: 1.1em;'>
+                <strong>Total Savings: ${totalDiscount:F2}</strong>
+            </div>" : "")}
+
             <div class='total'>
-                Total: ${totalPrice:F2}
+                <span style='color: #666; font-size: 0.9em;'>Order Total:</span><br>
+                ${totalPrice:F2}
             </div>
 
             <h3>Payment Information:</h3>
