@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+option csharp_namespace = "Catalog.Grpc";
+
+package catalog;
+
+// The catalog service definition with discount information
+service CatalogProtoService {
+  // Get product with discount information
+  rpc GetProductWithDiscount (GetProductRequest) returns (ProductModel);
+
+  // Get products by category with discount information
+  rpc GetProductsByCategoryWithDiscount (GetProductsByCategoryRequest) returns (ProductListModel);
+}
+
+message GetProductRequest {
+  string productId = 1;
+}
+
+message GetProductsByCategoryRequest {
+  string category = 1;
+}
+
+message ProductModel {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  string imageFile = 5;
+  repeated string categories = 6;
+  DiscountInfo discount = 7;
+}
+
+message DiscountInfo {
+  bool hasDiscount = 1;
+  double amount = 2;
+  string description = 3;
+  double finalPrice = 4;
+}
+
+message ProductListModel {
+  repeated ProductModel products = 1;
+}

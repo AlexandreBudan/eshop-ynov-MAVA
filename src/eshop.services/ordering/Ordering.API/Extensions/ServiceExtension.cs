@@ -1,4 +1,5 @@
 using BuildingBlocks.Middlewares;
+using Catalog.Grpc;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
@@ -25,7 +26,14 @@ public static class ServiceExtension
         var connectionString = configuration.GetConnectionString("OrderingConnection");
         services.AddHealthChecks()
             .AddSqlServer(connectionString!);
-        
+
+        // Register gRPC client for Catalog service
+        var catalogUrl = configuration["GrpcSettings:CatalogUrl"] ?? "http://localhost:6060";
+        services.AddGrpcClient<CatalogProtoService.CatalogProtoServiceClient>(options =>
+        {
+            options.Address = new Uri(catalogUrl);
+        });
+
         return services;
     }
 

@@ -103,6 +103,7 @@
     networks:
       - ordering_network
       - messageBroker_network
+      - catalog_network
     depends_on:
       ordering.database:
         condition: service_started
@@ -112,6 +113,9 @@
         condition: service_healthy
         required: true
         restart: true
+      catalog.api:
+        condition: service_started
+        required: false
 
 ### Shared infrastructure ###
 volumes:

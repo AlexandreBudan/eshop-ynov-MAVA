@@ -138,3 +138,4 @@
       - MessageBroker__UserName=${RABBITMQ_USER}
       - MessageBroker__Password=${RABBITMQ_PASSWORD}
       - FeatureManagement__OrderFulfilment=false
+      - GrpcSettings__CatalogUrl=http://catalog.api:6060

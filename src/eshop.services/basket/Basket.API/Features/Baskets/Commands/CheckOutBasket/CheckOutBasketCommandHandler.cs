@@ -30,14 +30,24 @@ public class CheckOutBasketCommandHandler(IBasketRepository repository, IPublish
     {
         var basket = await repository.GetBasketByUserNameAsync(request.BasketCheckoutDto.UserName, cancellationToken)
             .ConfigureAwait(false);
-        
+
         var eventMessage = request.BasketCheckoutDto.Adapt<BasketCheckoutEvent>();
         eventMessage.TotalPrice = basket.Total;
-        
+
+        // Map basket items to the event
+        eventMessage.Items = basket.Items.Select(item => new BasketItem
+        {
+            ProductId = item.ProductId,
+            Quantity = item.Quantity,
+            ProductName = item.ProductName,
+            Price = item.Price,
+            Color = item.Color
+        }).ToList();
+
         await publishEndpoint.Publish(eventMessage, cancellationToken).ConfigureAwait(false);
-        
+
         await repository.DeleteBasketAsync(request.BasketCheckoutDto.UserName, cancellationToken).ConfigureAwait(false);
-        
+
         return new CheckOutBasketCommandResult(true);
     }
 }
