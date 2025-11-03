@@ -27,7 +27,7 @@
     ports:
       - "${CATALOG_POSTGRES_PORT}:5432"
     volumes:
-      - catalog_data:/var/lib/postgresql/data
+      - catalog_data:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${CATALOG_POSTGRES_PASSWORD}
       POSTGRES_USER: ${CATALOG_POSTGRES_USER}
@@ -57,7 +57,7 @@
     ports:
       - "${BASKET_POSTGRES_PORT}:5432"
     volumes:
-      - basket_data:/var/lib/postgresql/data
+      - basket_data:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${BASKET_POSTGRES_PASSWORD}
       POSTGRES_USER: ${BASKET_POSTGRES_USER}
