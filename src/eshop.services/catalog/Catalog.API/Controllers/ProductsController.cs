@@ -87,7 +87,7 @@ public class ProductsController(ISender sender) : ControllerBase
     public async Task<ActionResult<CreateProductCommandResult>> CreateProduct(CreateProductCommand request)
     {
         var result = await sender.Send(request);
-        return CreatedAtAction(nameof(GetProductById), new { id = result.Id }, result);
+        return CreatedAtAction(nameof(GetProductById), new { id = result.Product.Id }, result.Product);
     }
 
     /// <summary>

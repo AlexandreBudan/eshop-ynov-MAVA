@@ -34,6 +34,6 @@ public class CreateProductCommandHandler(IDocumentSession documentSession): ICom
         
         await documentSession.SaveChangesAsync(cancellationToken);
 
-        return new CreateProductCommandResult(product.Id);
+        return new CreateProductCommandResult(product);
     }
 }
