@@ -1,6 +1,7 @@
 using BuildingBlocks.CQRS;
 using Microsoft.EntityFrameworkCore;
 using Ordering.Application.Features.Orders.Data;
+using Ordering.Domain.Events;
 using Ordering.Domain.Exceptions;
 using Ordering.Domain.ValueObjects;
 using Ordering.Domain.ValueObjects.Types;
@@ -27,6 +28,8 @@ public class DeleteOrderCommandHandler(IOrderingDbContext orderingDbContext) : I
         {
             throw new OrderNotFoundException(request.OrderId);
         }
+
+        order.AddDomainEvent(new OrderCancelledEvent(order));
 
         orderingDbContext.Orders.Remove(order);
         await orderingDbContext.SaveChangesAsync(cancellationToken);

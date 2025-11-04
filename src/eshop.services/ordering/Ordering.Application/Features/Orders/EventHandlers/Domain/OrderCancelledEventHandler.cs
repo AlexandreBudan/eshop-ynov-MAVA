@@ -1,8 +1,6 @@
-using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.FeatureManagement;
 using Ordering.Application.Extensions;
 using Ordering.Application.Features.Orders.Data;
 using Ordering.Application.Services;
@@ -10,12 +8,12 @@ using Ordering.Domain.Events;
 
 namespace Ordering.Application.Features.Orders.EventHandlers.Domain;
 
-public class OrderUpdatedEventHandler(
+public class OrderCancelledEventHandler(
     IOrderingDbContext dbContext,
     IEmailService emailService,
-    ILogger<OrderUpdatedEventHandler> logger) : INotificationHandler<OrderUpdatedEvent>
+    ILogger<OrderCancelledEventHandler> logger) : INotificationHandler<OrderCancelledEvent>
 {
-    public async Task Handle(OrderUpdatedEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(OrderCancelledEvent notification, CancellationToken cancellationToken)
     {
         logger.LogInformation("Domain Event Handled: {DomainEvent}", notification.GetType().Name);
 
@@ -26,8 +24,8 @@ public class OrderUpdatedEventHandler(
             if (customer != null && !string.IsNullOrEmpty(customer.Email))
             {
                 var orderDto = notification.Order.ToOrderDto();
-                await emailService.SendOrderStatusUpdateEmailAsync(orderDto, customer.Email, cancellationToken);
-                logger.LogInformation("Order status update email sent for Order {OrderId} to {CustomerEmail}", notification.Order.Id, customer.Email);
+                await emailService.SendOrderCancelledEmailAsync(orderDto, customer.Email, cancellationToken);
+                logger.LogInformation("Order cancellation email sent for Order {OrderId} to {CustomerEmail}", notification.Order.Id, customer.Email);
             }
             else
             {
@@ -36,7 +34,7 @@ public class OrderUpdatedEventHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send order status update email for Order {OrderId}", notification.Order.Id);
+            logger.LogError(ex, "Failed to send order cancellation email for Order {OrderId}", notification.Order.Id);
         }
     }
 }
