@@ -47,7 +47,10 @@ public class CheckOutBasketCommandHandler(IBasketRepository repository, IPublish
         await publishEndpoint.Publish(eventMessage, cancellationToken).ConfigureAwait(false);
 
         await repository.DeleteBasketAsync(request.BasketCheckoutDto.UserName, cancellationToken).ConfigureAwait(false);
-
-        return new CheckOutBasketCommandResult(true);
+        return new CheckOutBasketCommandResult(
+            true,
+            basket.UserName,
+            basket.Total,
+            basket.Items);
     }
 }

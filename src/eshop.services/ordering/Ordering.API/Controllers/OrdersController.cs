@@ -97,14 +97,15 @@ public class OrdersController(ISender sender) : ControllerBase
     /// Updates an existing order with the provided order details.
     /// </summary>
     /// <param name="order">The updated order details encapsulated in an <see cref="OrderDto"/>.</param>
-    /// <returns>A boolean result indicating whether the update operation was successful.</returns>
+    /// <returns>The updated order with its complete details.</returns>
     [HttpPut]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(OrderDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<bool>> UpdateOrder([FromBody] OrderDto order)
+    public async Task<ActionResult<OrderDto>> UpdateOrder([FromBody] OrderDto order)
     {
-        var result = await sender.Send(new UpdateOrderCommand(order));
-        return Ok(result.IsSuccess);
+        _ = await sender.Send(new UpdateOrderCommand(order));
+        var updatedOrder = await sender.Send(new GetOrderByIdQuery(order.Id));
+        return Ok(updatedOrder);
     }
 
     /// <summary>
