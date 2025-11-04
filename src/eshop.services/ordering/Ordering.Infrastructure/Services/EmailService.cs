@@ -14,11 +14,16 @@ public class EmailService : IEmailService
 {
     private readonly IConfiguration _configuration;
     private readonly ILogger<EmailService> _logger;
+    private readonly IEmailRetryService _emailRetryService;
 
-    public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
+    public EmailService(
+        IConfiguration configuration,
+        ILogger<EmailService> logger,
+        IEmailRetryService emailRetryService)
     {
         _configuration = configuration;
         _logger = logger;
+        _emailRetryService = emailRetryService;
     }
 
     /// <summary>
@@ -64,8 +69,20 @@ public class EmailService : IEmailService
             _logger.LogError(ex, "Failed to send order confirmation email to {CustomerEmail} for order {OrderId}",
                 customerEmail, order.Id);
 
-            // Note: We don't throw here to prevent email failures from breaking the order creation flow
-            // In a production system, you might want to queue failed emails for retry
+            // Queue the failed email for retry
+            await _emailRetryService.QueueFailedEmailAsync(
+                order.Id,
+                customerEmail,
+                order,
+                ex.Message,
+                cancellationToken);
+
+            _logger.LogInformation("Failed email queued for retry for order {OrderId}. " +
+                "The background service will automatically retry sending this email up to {MaxRetries} times with exponential backoff.",
+                order.Id, 5);
+
+            // Note: We don't throw here to prevent email failures from breaking the order creation flow.
+            // The email has been queued for automatic retry by the EmailRetryBackgroundService.
         }
     }
 

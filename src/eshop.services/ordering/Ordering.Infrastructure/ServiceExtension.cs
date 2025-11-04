@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Ordering.Application.Features.Orders.Data;
 using Ordering.Application.Services;
+using Ordering.Infrastructure.BackgroundServices;
 using Ordering.Infrastructure.Data;
 using Ordering.Infrastructure.Data.Interceptors;
 using Ordering.Infrastructure.Services;
@@ -25,8 +26,12 @@ public static class ServiceExtension
             options.UseSqlServer(connectionString);
         });
 
-        // Register email service
+        // Register email services
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailRetryService, EmailRetryService>();
+
+        // Register background service for email retry
+        services.AddHostedService<EmailRetryBackgroundService>();
 
         return services;
     }

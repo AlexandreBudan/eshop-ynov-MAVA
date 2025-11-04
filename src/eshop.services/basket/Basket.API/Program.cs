@@ -87,3 +87,8 @@ app.UseHealthChecks("/health", new HealthCheckOptions()
 });
 
 app.Run();
+
+namespace Basket.API
+{
+    public partial class Program { }
+}

@@ -59,7 +59,6 @@ public class OrderCreatedEventHandler(
         catch (Exception ex)
         {
             logger.LogError(ex, "Failed to send order confirmation email for Order {OrderId}", notification.Order.Id);
-            // Don't throw - email failure shouldn't break order creation
         }
     }
 }
