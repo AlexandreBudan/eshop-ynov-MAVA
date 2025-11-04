@@ -120,29 +120,32 @@ public class Coupon
     public DateTime UpdatedAt { get; set; }
 
     /// <summary>
-    /// Checks if the coupon is currently valid based on dates and status
+    /// Checks if the coupon is currently valid based on dates and status.
     /// </summary>
-    public bool IsValid()
+    public bool IsCurrentlyValid
     {
-        var now = DateTime.UtcNow;
+        get
+        {
+            var now = DateTime.UtcNow;
 
-        // Check status
-        if (Status != CouponStatus.Active)
-            return false;
+            // Check status
+            if (Status != CouponStatus.Active)
+                return false;
 
-        // Check start date
-        if (StartDate.HasValue && now < StartDate.Value)
-            return false;
+            // Check start date
+            if (StartDate.HasValue && now < StartDate.Value.ToUniversalTime())
+                return false;
 
-        // Check end date
-        if (EndDate.HasValue && now > EndDate.Value)
-            return false;
+            // Check end date
+            if (EndDate.HasValue && now > EndDate.Value.ToUniversalTime())
+                return false;
 
-        // Check usage limit
-        if (MaxUsageCount > 0 && CurrentUsageCount >= MaxUsageCount)
-            return false;
+            // Check usage limit
+            if (MaxUsageCount > 0 && CurrentUsageCount >= MaxUsageCount)
+                return false;
 
-        return true;
+            return true;
+        }
     }
 
     /// <summary>
@@ -157,7 +160,7 @@ public class Coupon
             return;
 
         // Check if expired by date
-        if (EndDate.HasValue && now > EndDate.Value)
+        if (EndDate.HasValue && now > EndDate.Value.ToUniversalTime())
         {
             Status = CouponStatus.Expired;
             return;
@@ -171,7 +174,7 @@ public class Coupon
         }
 
         // Check if upcoming
-        if (StartDate.HasValue && now < StartDate.Value)
+        if (StartDate.HasValue && now < StartDate.Value.ToUniversalTime())
         {
             Status = CouponStatus.UpcomingActive;
             return;

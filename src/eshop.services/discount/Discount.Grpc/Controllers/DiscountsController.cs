@@ -128,7 +128,7 @@ public class DiscountsController(
 
         coupon.UpdateStatus();
 
-        if (!coupon.IsValid())
+        if (!coupon.IsCurrentlyValid)
         {
             response.IsValid = false;
             response.ValidationMessage = "Coupon is not valid";
@@ -228,7 +228,7 @@ public class DiscountsController(
 
         // Update statuses and filter valid coupons
         allCoupons.ForEach(c => c.UpdateStatus());
-        var validCoupons = allCoupons.Where(c => c.IsValid()).ToList();
+        var validCoupons = allCoupons.Where(c => c.IsCurrentlyValid).ToList();
 
         // Separate automatic and code-based discounts
         var automaticDiscounts = validCoupons
@@ -249,7 +249,7 @@ public class DiscountsController(
         {
             ProductId = productId,
             ProductName = allCoupons.FirstOrDefault()?.ProductName ?? productId,
-            AvailableDiscounts = allDiscounts.Select(c => c.Adapt<CouponResponseDto>()).ToList(),
+            AvailableDiscounts = validCoupons.Select(c => c.Adapt<CouponResponseDto>()).ToList(),
             BestAutomaticDiscount = bestAutomatic?.Adapt<CouponResponseDto>(),
             AutomaticDiscountCount = automaticDiscounts.Count,
             CodeBasedDiscountCount = codeBasedDiscounts.Count
@@ -313,7 +313,7 @@ public class DiscountsController(
         var campaigns = await query.ToListAsync();
 
         campaigns.ForEach(c => c.UpdateStatus());
-        var validCampaigns = campaigns.Where(c => c.IsValid()).ToList();
+        var validCampaigns = campaigns.Where(c => c.IsCurrentlyValid).ToList();
 
         var response = new PagedResultDto<CouponResponseDto>
         {

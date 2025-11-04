@@ -348,7 +348,7 @@ public class CouponsController : ControllerBase
     private static CouponResponseDto MapToResponseDto(Coupon coupon)
     {
         var dto = coupon.Adapt<CouponResponseDto>();
-        dto.IsCurrentlyValid = coupon.IsValid();
+        dto.IsCurrentlyValid = coupon.IsCurrentlyValid;
         return dto;
     }
 }
