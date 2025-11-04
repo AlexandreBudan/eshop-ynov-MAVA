@@ -112,7 +112,7 @@ public class DiscountCalculator
     private List<Coupon> FilterCoupons(List<Coupon> coupons, List<string>? requestedCodes, double purchaseAmount, List<string>? categories)
     {
         // First, filter by validity (dates, status, usage count)
-        var validCoupons = coupons.Where(c => c.IsValid()).ToList();
+        var validCoupons = coupons.Where(c => c.IsCurrentlyValid).ToList();
 
         // Filter by minimum purchase amount
         validCoupons = validCoupons.Where(c => purchaseAmount >= c.MinimumPurchaseAmount).ToList();
@@ -141,8 +141,8 @@ public class DiscountCalculator
         // Then filter by coupon codes and automatic campaigns
         if (requestedCodes == null || !requestedCodes.Any())
         {
-            // Return automatic discounts (no code required OR automatic campaigns)
-            return validCoupons.Where(c => string.IsNullOrEmpty(c.CouponCode) || c.IsAutomatic).ToList();
+            // Return all valid discounts if no specific codes are requested
+            return validCoupons.ToList();
         }
 
         var result = new List<Coupon>();

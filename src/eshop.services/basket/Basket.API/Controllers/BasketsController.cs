@@ -1,3 +1,4 @@
+using Basket.API.Features.Baskets.Commands.CheckOutBasket;
 using Basket.API.Features.Baskets.Commands.AddItemToBasket;
 using Basket.API.Features.Baskets.Commands.CreateBasket;
 using Basket.API.Features.Baskets.Commands.DeleteBasket;
@@ -64,52 +65,17 @@ public class BasketsController (ISender sender) : ControllerBase
     }
     
     /// <summary>
-    /// Adds an item to the user's shopping basket.
+    /// Processes the checkout operation for the specified user's basket.
     /// </summary>
-    /// <param name="userName">The username of the user whose basket is being modified.</param>
-    /// <param name="item">The shopping cart item to add.</param>
-    /// <returns>An OK result indicating success.</returns>
-    [HttpPut("items")]
-    [ProducesResponseType(typeof(OkResult), StatusCodes.Status200OK)]
-    public async Task<ActionResult> AddItemToBasket([FromRoute] string userName, [FromBody] ShoppingCartItem item)
+    /// <param name="userName">The username whose basket is to be checked out.</param>
+    /// <param name="request">The details of the checkout request, including basket information.</param>
+    /// <returns>The result of the checkout operation with complete details including total price and items.</returns>
+    [HttpPost("Checkout")]
+    [ProducesResponseType(typeof(CheckOutBasketCommandResult), StatusCodes.Status201Created)]
+    public async Task<ActionResult<CheckOutBasketCommandResult>> CheckOutBasket(string userName, [FromBody] CheckOutBasketCommand request)
     {
-        var command = new AddItemToBasketCommand(userName, item);
-        var result = await sender.Send(command);
+        request.BasketCheckoutDto.UserName = userName;
+        var result = await sender.Send(request);
         return Ok(result);
     }
-
-    /// <summary>
-    /// Updates an item in the user's shopping basket.
-    /// </summary>
-    /// <param name="userName">The username of the user whose basket is to be updated.</param>
-    /// <param name="body">The request body containing the product ID and quantity.</param>
-    /// <returns>An OK response if the update is successful, or a not-found response if the basket or item does not exist.</returns>
-    [HttpPatch("items")]
-    [ProducesResponseType(typeof(ShoppingCart), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ShoppingCart>> UpdateBasketItem(string userName, [FromBody] JsonDocument body)
-    {
-        JsonElement root = body.RootElement;
-        Guid productId = root.GetProperty("productId").GetGuid();
-        int quantity = root.GetProperty("quantity").GetInt32();
-
-        var result = await sender.Send(new UpdateBasketCommand(userName, productId, quantity));
-        return Ok(result.Cart);
-    }
-    
-    /// <summary>
-    /// Deletes an item from the shopping basket for the specified user.
-    /// </summary>
-    /// <param name="userName">The username whose shopping basket is to be modified.</param>
-    /// <param name="productId">The id of the product to be removed from the basket.</param>
-    /// <returns>A boolean value indicating whether the item was successfully deleted.</returns>
-    [HttpDelete("items/{productId:guid}")]
-    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(NotFoundObjectResult), StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<bool>> DeleteBasketItem(string userName, Guid productId)
-    {
-        var result = await sender.Send(new DeleteBasketItemCommand(userName, productId));
-        return Ok(result.IsSuccess);
-    }
-    
 }

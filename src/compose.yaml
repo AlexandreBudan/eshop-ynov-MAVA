@@ -1,5 +1,20 @@
 ﻿services:
   
+  ### Common Service ###
+  messageBroker:
+    image: rabbitmq:management
+    container_name: messageBroker_rabbitmq
+    hostname: ecommerce-rabbitmq-server
+    networks:
+      - messageBroker_network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    networks:
+      - mail_network
+      - ordering_network
+
   ### Service Catalog ###
   
   catalog.database:
@@ -13,14 +28,29 @@
     container_name: catalog_api
     build:
       context: .
-      dockerfile: eShop.services/catalog/Catalog.API/Dockerfile
+      dockerfile: eShop.Services/Catalog/Catalog.API/Dockerfile
     networks:
       - catalog_network
+      - discount_network
     depends_on:
       catalog.database:
         condition: service_healthy
         required: true
         restart: true
+  
+  
+  ### Service Discount ###
+  
+  discount.grpc:
+    image: discount.grpc
+    container_name: discount_grpc
+    restart: always
+    build:
+      context: .
+      dockerfile: eShop.Services/Discount/Discount.Grpc/Dockerfile
+    networks:
+      - discount_network
+      - basket_network
   
   ### Service Basket ###
   
@@ -41,9 +71,10 @@
     container_name: basket_api
     build:
       context: .
-      dockerfile: eshop.services/basket/Basket.API/Dockerfile
+      dockerfile: eShop.Services/Basket/Basket.API/Dockerfile
     networks:
       - basket_network
+      - messageBroker_network
     depends_on:
       basket.database:
         condition: service_healthy
@@ -53,18 +84,49 @@
         condition: service_healthy
         required: true
         restart: true
-        
-  ### Service Discount ###
-  discount.grpc:
-    image: discount.grpc
-    container_name: discount_grpc
-    restart: always
+      messageBroker:
+        condition: service_healthy
+        required: true
+        restart: true
+      discount.grpc:
+        condition: service_started
+        required: true
+        restart: true
+  
+  ### Service Ordering ###
+
+  ordering.database:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: ordering_database
+    platform: linux/amd64
+    networks:
+      - ordering_network
+  
+  ordering.api:
+    image: ordering.api
+    container_name: ordering_api
     build:
       context: .
-      dockerfile: eshop.services/discount/Discount.Grpc/Dockerfile
+      dockerfile: eShop.Services/Ordering/Ordering.API/Dockerfile
     networks:
-      - discount_network
-      - basket_network
+      - ordering_network
+      - messageBroker_network
+      - catalog_network
+    depends_on:
+      ordering.database:
+        condition: service_started
+        required: true
+        restart: true
+      messageBroker:
+        condition: service_healthy
+        required: true
+        restart: true
+      catalog.api:
+        condition: service_started
+        required: false
+      mailpit:
+        condition: service_started
+        required: false
 
 ### Shared infrastructure ###
 volumes:
@@ -72,18 +134,26 @@ volumes:
     name: catalog_data
   basket_data:
     name: basket_data
-  redis_data:
-    name: redis_data
   ordering_data:
     name: ordering_data
+  redis_data:
+    name: redis_data
+  messageBroker_data:
+    name: messageBroker_data
+  messageBroker_logs:
+    name: messageBroker_logs
 
 
 networks:
   catalog_network:
     name: catalog_network
   basket_network:
-    name: basket_network 
+    name: basket_network
   discount_network:
     name: discount_network
-
-
+  ordering_network:
+    name: ordering_network
+  messageBroker_network:
+    name: messageBroker_network
+  mail_network:
+    name: mail_network

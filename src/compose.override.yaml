@@ -1,49 +1,85 @@
 ﻿services:
+  ### Common Service ###
+  messageBroker:
+    restart: always
+    volumes:
+      - messageBroker_data:/var/lib/rabbitmq
+      - messageBroker_logs:/var/log/rabbitmq
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT}:15672"
+    environment:
+      # Utilisateur et mot de passe admin
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  mailpit:
+    restart: always
+    ports:
+      - "${MAILPIT_SMTP_PORT}:1025"  # SMTP port
+      - "${MAILPIT_UI_PORT}:8025"    # Web UI port
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
   ### Service Catalog ###
-  
+
   catalog.database:
     restart: always
     shm_size: 128mb
     ports:
       - "${CATALOG_POSTGRES_PORT}:5432"
     volumes:
-      - catalog_data:/var/lib/postgresql/data
+      - catalog_data:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${CATALOG_POSTGRES_PASSWORD}
       POSTGRES_USER: ${CATALOG_POSTGRES_USER}
       POSTGRES_DB: ${CATALOG_POSTGRES_DB}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${CATALOG_POSTGRES_USER} -d ${CATALOG_POSTGRES_DB}" ]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${CATALOG_POSTGRES_USER} -d ${CATALOG_POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
-  
+
   catalog.api:
     ports:
-      - "6060:${CATALOG_API_PORT}" #http
+      - "6060:6060" # REST API (HTTP/1.1)
+      - "6006:6006" # gRPC (HTTP/2)
     environment:
-      - ASPNETCORE_HTTP_PORTS=${CATALOG_API_PORT}
-      - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=${CATALOG_POSTGRES_PORT};Database=${CATALOG_POSTGRES_DB};Username=${CATALOG_POSTGRES_USER};Password=${CATALOG_POSTGRES_PASSWORD}
-  
+      - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=5432;Database=CatalogDb;Username=CatalogAdmin;Password=Pass1234!
+
   ### Service Basket ###
-  
+
   basket.database:
     restart: always
     shm_size: 128mb
     ports:
       - "${BASKET_POSTGRES_PORT}:5432"
     volumes:
-      - basket_data:/var/lib/postgresql/data
+      - basket_data:/var/lib/postgresql
     environment:
       POSTGRES_PASSWORD: ${BASKET_POSTGRES_PASSWORD}
       POSTGRES_USER: ${BASKET_POSTGRES_USER}
       POSTGRES_DB: ${BASKET_POSTGRES_DB}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${BASKET_POSTGRES_USER} -d ${BASKET_POSTGRES_DB}" ]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${BASKET_POSTGRES_USER} -d ${BASKET_POSTGRES_DB}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
-  
 
   basket.redis:
     restart: always
@@ -52,11 +88,11 @@
     volumes:
       - redis_data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 3
-  
+
   basket.api:
     ports:
       - "6061:${BASKET_API_PORT}"
@@ -64,12 +100,59 @@
       - ASPNETCORE_HTTP_PORTS=${BASKET_API_PORT}
       - ConnectionStrings__BasketConnection=Server=basket.database;Port=5432;Database=${BASKET_POSTGRES_DB};Username=${BASKET_POSTGRES_USER};Password=${BASKET_POSTGRES_PASSWORD}
       - ConnectionStrings__RedisConnection=basket.redis:6379
-          
+      - GrpcSettings__DiscountUrl=http://discount.grpc:6062
+      - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
+      - MessageBroker__UserName=${RABBITMQ_USER}
+      - MessageBroker__Password=${RABBITMQ_PASSWORD}
+
+  ### Service Discount ###
+
   discount.grpc:
     ports:
-      - "6062:${DISCOUNT_API_PORT}"
+      - "6062:6062" # REST API (HTTP/1.1)
+      - "6026:6026" # gRPC (HTTP/2)
     volumes:
       - ./eshop.services/discount/data:/app/data
     environment:
-      - ASPNETCORE_HTTP_PORTS=${DISCOUNT_API_PORT}
+      - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DiscountConnection=Data Source=data/discountDatabase
+
+  ### Service Ordering ###
+  ordering.database:
+    restart: always
+    ports:
+      - "${ORDERING_SQLSERVER_PORT}:1433"
+    volumes:
+      - ordering_data:/var/opt/mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${ORDERING_SQLSERVER_SA_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${ORDERING_SQLSERVER_SA_PASSWORD} -Q 'SELECT 1'",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  ordering.api:
+    ports:
+      - "6063:${ORDERING_API_PORT}" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${ORDERING_API_PORT}
+      - ConnectionStrings__OrderingConnection=Server=ordering_database;Database=${ORDERING_SQLSERVER_DB};User Id=sa;Password=${ORDERING_SQLSERVER_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
+      - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
+      - MessageBroker__UserName=${RABBITMQ_USER}
+      - MessageBroker__Password=${RABBITMQ_PASSWORD}
+      - FeatureManagement__OrderFulfilment=false
+      - GrpcSettings__CatalogUrl=http://catalog.api:6006
+      - EmailSettings__FromEmail=noreply@eshop.com
+      - EmailSettings__FromName=eShop Support
+      - EmailSettings__SmtpServer=mailpit
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__SmtpUsername=
+      - EmailSettings__SmtpPassword=
+      - EmailSettings__EnableSsl=false

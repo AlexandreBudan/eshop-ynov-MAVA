@@ -408,3 +408,8 @@ serilog.*.json
 !serilog.json
 sources/.DS_Store
 .DS_Store
+
+# SQL lite database files
+discountDatabase
+discountDatabase-shm
+discountDatabase-wal
