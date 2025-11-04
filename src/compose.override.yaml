@@ -19,6 +19,15 @@
       retries: 3
       start_period: 60s
 
+  mailpit:
+    restart: always
+    ports:
+      - "${MAILPIT_SMTP_PORT}:1025"  # SMTP port
+      - "${MAILPIT_UI_PORT}:8025"    # Web UI port
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
   ### Service Catalog ###
 
   catalog.database:
@@ -140,3 +149,10 @@
       - MessageBroker__Password=${RABBITMQ_PASSWORD}
       - FeatureManagement__OrderFulfilment=false
       - GrpcSettings__CatalogUrl=http://catalog.api:6006
+      - EmailSettings__FromEmail=noreply@eshop.com
+      - EmailSettings__FromName=eShop Support
+      - EmailSettings__SmtpServer=mailpit
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__SmtpUsername=
+      - EmailSettings__SmtpPassword=
+      - EmailSettings__EnableSsl=false
