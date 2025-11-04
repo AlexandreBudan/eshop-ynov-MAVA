@@ -15,4 +15,22 @@ public interface IEmailService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task SendOrderConfirmationEmailAsync(OrderDto order, string customerEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends an email notification to the customer when the order status changes.
+    /// </summary>
+    /// <param name="order">The order details to include in the email.</param>
+    /// <param name="customerEmail">The email address of the customer.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task SendOrderStatusUpdateEmailAsync(OrderDto order, string customerEmail, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends an email notification to the customer when the order is cancelled.
+    /// </summary>
+    /// <param name="order">The order details to include in the email.</param>
+    /// <param name="customerEmail">The email address of the customer.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task SendOrderCancelledEmailAsync(OrderDto order, string customerEmail, CancellationToken cancellationToken = default);
 }
