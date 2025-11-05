@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.FeatureManagement;
 using Ordering.Application.Extensions;
 using Ordering.Application.Features.Orders.Data;
-using Ordering.Application.Services;
 using Ordering.Domain.Events;
 
 namespace Ordering.Application.Features.Orders.EventHandlers.Domain;
@@ -19,8 +18,7 @@ public class OrderCreatedEventHandler(
     IPublishEndpoint publishEndpoint,
     IFeatureManager featureManager,
     ILogger<OrderCreatedEventHandler> logger,
-    IOrderingDbContext dbContext,
-    IEmailService emailService) : INotificationHandler<OrderCreatedEvent>
+    IOrderingDbContext dbContext) : INotificationHandler<OrderCreatedEvent>
 {
     /// <summary>
     /// Handles the domain event when a new order is created.
@@ -38,7 +36,7 @@ public class OrderCreatedEventHandler(
             await publishEndpoint.Publish(orderCreatedIntegrationEvent, cancellationToken);
         }
 
-        // Send order confirmation email
+        // Publish order confirmation notification event to RabbitMQ
         try
         {
             var customer = await dbContext.Customers
@@ -46,10 +44,10 @@ public class OrderCreatedEventHandler(
 
             if (customer != null && !string.IsNullOrEmpty(customer.Email))
             {
-                var orderDto = notification.Order.ToOrderDto();
-                await emailService.SendOrderConfirmationEmailAsync(orderDto, customer.Email, cancellationToken);
-                logger.LogInformation("Order confirmation email sent for Order {OrderId} to {CustomerEmail}",
-                    notification.Order.Id, customer.Email);
+                var notificationEvent = notification.Order.ToOrderConfirmationNotificationEvent(customer.Email);
+                await publishEndpoint.Publish(notificationEvent, cancellationToken);
+                logger.LogInformation("Order confirmation notification event published for Order {OrderId}",
+                    notification.Order.Id);
             }
             else
             {
@@ -58,7 +56,7 @@ public class OrderCreatedEventHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send order confirmation email for Order {OrderId}", notification.Order.Id);
+            logger.LogError(ex, "Failed to publish order confirmation notification event for Order {OrderId}", notification.Order.Id);
         }
     }
 }

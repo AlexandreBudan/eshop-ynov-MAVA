@@ -2,17 +2,15 @@ using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.FeatureManagement;
 using Ordering.Application.Extensions;
 using Ordering.Application.Features.Orders.Data;
-using Ordering.Application.Services;
 using Ordering.Domain.Events;
 
 namespace Ordering.Application.Features.Orders.EventHandlers.Domain;
 
 public class OrderUpdatedEventHandler(
     IOrderingDbContext dbContext,
-    IEmailService emailService,
+    IPublishEndpoint publishEndpoint,
     ILogger<OrderUpdatedEventHandler> logger) : INotificationHandler<OrderUpdatedEvent>
 {
     public async Task Handle(OrderUpdatedEvent notification, CancellationToken cancellationToken)
@@ -25,9 +23,9 @@ public class OrderUpdatedEventHandler(
 
             if (customer != null && !string.IsNullOrEmpty(customer.Email))
             {
-                var orderDto = notification.Order.ToOrderDto();
-                await emailService.SendOrderStatusUpdateEmailAsync(orderDto, customer.Email, cancellationToken);
-                logger.LogInformation("Order status update email sent for Order {OrderId} to {CustomerEmail}", notification.Order.Id, customer.Email);
+                var notificationEvent = notification.Order.ToOrderStatusUpdateNotificationEvent(customer.Email);
+                await publishEndpoint.Publish(notificationEvent, cancellationToken);
+                logger.LogInformation("Order status update notification event published for Order {OrderId}", notification.Order.Id);
             }
             else
             {
@@ -36,7 +34,7 @@ public class OrderUpdatedEventHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send order status update email for Order {OrderId}", notification.Order.Id);
+            logger.LogError(ex, "Failed to publish order status update notification event for Order {OrderId}", notification.Order.Id);
         }
     }
 }

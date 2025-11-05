@@ -1,16 +1,16 @@
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Ordering.Application.Extensions;
 using Ordering.Application.Features.Orders.Data;
-using Ordering.Application.Services;
 using Ordering.Domain.Events;
 
 namespace Ordering.Application.Features.Orders.EventHandlers.Domain;
 
 public class OrderCancelledEventHandler(
     IOrderingDbContext dbContext,
-    IEmailService emailService,
+    IPublishEndpoint publishEndpoint,
     ILogger<OrderCancelledEventHandler> logger) : INotificationHandler<OrderCancelledEvent>
 {
     public async Task Handle(OrderCancelledEvent notification, CancellationToken cancellationToken)
@@ -23,9 +23,9 @@ public class OrderCancelledEventHandler(
 
             if (customer != null && !string.IsNullOrEmpty(customer.Email))
             {
-                var orderDto = notification.Order.ToOrderDto();
-                await emailService.SendOrderCancelledEmailAsync(orderDto, customer.Email, cancellationToken);
-                logger.LogInformation("Order cancellation email sent for Order {OrderId} to {CustomerEmail}", notification.Order.Id, customer.Email);
+                var notificationEvent = notification.Order.ToOrderCancelledNotificationEvent(customer.Email);
+                await publishEndpoint.Publish(notificationEvent, cancellationToken);
+                logger.LogInformation("Order cancellation notification event published for Order {OrderId}", notification.Order.Id);
             }
             else
             {
@@ -34,7 +34,7 @@ public class OrderCancelledEventHandler(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Failed to send order cancellation email for Order {OrderId}", notification.Order.Id);
+            logger.LogError(ex, "Failed to publish order cancellation notification event for Order {OrderId}", notification.Order.Id);
         }
     }
 }
