@@ -179,6 +179,6 @@
 
   yarpapigateway:
     ports:
-      - "6064:${GATEWAY_API_PORT}" #http
+      - "6065:${GATEWAY_API_PORT}" #http
     environment:
       - ASPNETCORE_HTTP_PORTS=${GATEWAY_API_PORT}

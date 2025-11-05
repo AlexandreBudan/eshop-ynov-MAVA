@@ -157,6 +157,7 @@
       - ordering_network
       - basket_network
       - catalog_network
+      - discount_network
     depends_on:
       ordering.api:
         condition: service_started
@@ -167,6 +168,10 @@
         required: true
         restart: true
       catalog.api:
+        condition: service_started
+        required: true
+        restart: true
+      discount.grpc:
         condition: service_started
         required: true
         restart: true
