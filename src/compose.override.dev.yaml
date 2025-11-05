@@ -1,0 +1,50 @@
+# compose.override.dev.yaml
+#
+# Configuration de développement NON sécurisée - expose tous les ports
+# Utilisation : docker compose -f compose.yaml -f compose.override.yaml -f compose.override.dev.yaml up
+#
+# ⚠️ ATTENTION : À utiliser UNIQUEMENT en développement local
+# NE JAMAIS déployer en production avec ce fichier !
+
+services:
+  ### Services API - Ports de debug exposés ###
+
+  catalog.api:
+    ports:
+      - "6060:6060" # REST API (HTTP/1.1)
+      - "6006:6006" # gRPC (HTTP/2)
+
+  basket.api:
+    ports:
+      - "6061:${BASKET_API_PORT}"
+
+  discount.grpc:
+    ports:
+      - "6062:6062" # REST API (HTTP/1.1)
+      - "6026:6026" # gRPC (HTTP/2)
+
+  ordering.api:
+    ports:
+      - "6063:${ORDERING_API_PORT}"
+
+  notification.api:
+    ports:
+      - "6064:6064"
+
+  ### Bases de données - Accès direct pour debug ###
+
+  catalog.database:
+    ports:
+      - "${CATALOG_POSTGRES_PORT}:5432"
+
+  basket.database:
+    ports:
+      - "${BASKET_POSTGRES_PORT}:5432"
+
+  basket.redis:
+    ports:
+      - "${BASKET_REDIS_PORT}:6379"
+
+  ordering.database:
+    ports:
+      - "${ORDERING_SQLSERVER_PORT}:1433"
