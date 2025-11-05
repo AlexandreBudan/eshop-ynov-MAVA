@@ -100,7 +100,7 @@
       - ASPNETCORE_HTTP_PORTS=${BASKET_API_PORT}
       - ConnectionStrings__BasketConnection=Server=basket.database;Port=5432;Database=${BASKET_POSTGRES_DB};Username=${BASKET_POSTGRES_USER};Password=${BASKET_POSTGRES_PASSWORD}
       - ConnectionStrings__RedisConnection=basket.redis:6379
-      - GrpcSettings__DiscountUrl=http://discount.grpc:6062
+      - GrpcSettings__DiscountUrl=http://discount.grpc:6026
       - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
       - MessageBroker__UserName=${RABBITMQ_USER}
       - MessageBroker__Password=${RABBITMQ_PASSWORD}
