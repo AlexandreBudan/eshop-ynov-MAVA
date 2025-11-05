@@ -101,7 +101,7 @@
     platform: linux/amd64
     networks:
       - ordering_network
-  
+
   ordering.api:
     image: ordering.api
     container_name: ordering_api
@@ -124,6 +124,23 @@
       catalog.api:
         condition: service_started
         required: false
+
+  ### Service Notification ###
+
+  notification.api:
+    image: notification.api
+    container_name: notification_api
+    build:
+      context: .
+      dockerfile: eShop.Services/Notification/Notification.API/Dockerfile
+    networks:
+      - messageBroker_network
+      - mail_network
+    depends_on:
+      messageBroker:
+        condition: service_healthy
+        required: true
+        restart: true
       mailpit:
         condition: service_started
         required: false

@@ -156,3 +156,20 @@
       - EmailSettings__SmtpUsername=
       - EmailSettings__SmtpPassword=
       - EmailSettings__EnableSsl=false
+
+  ### Service Notification ###
+  notification.api:
+    ports:
+      - "6064:6064" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=6064
+      - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
+      - MessageBroker__UserName=${RABBITMQ_USER}
+      - MessageBroker__Password=${RABBITMQ_PASSWORD}
+      - EmailSettings__FromEmail=noreply@eshop.com
+      - EmailSettings__FromName=eShop Support
+      - EmailSettings__SmtpServer=mailpit
+      - EmailSettings__SmtpPort=1025
+      - EmailSettings__SmtpUsername=
+      - EmailSettings__SmtpPassword=
+      - EmailSettings__EnableSsl=false
