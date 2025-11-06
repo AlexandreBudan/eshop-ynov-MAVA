@@ -1,5 +1,4 @@
 ﻿services:
-  
   ### Common Service ###
   messageBroker:
     image: rabbitmq:management
@@ -16,13 +15,13 @@
       - ordering_network
 
   ### Service Catalog ###
-  
+
   catalog.database:
     image: postgres:latest
     container_name: catalog_database
     networks:
       - catalog_network
-  
+
   catalog.api:
     image: catalog.api
     container_name: catalog_api
@@ -37,13 +36,12 @@
         condition: service_healthy
         required: true
         restart: true
-  
-  
+
   ### Service Discount ###
-  
+
   discount.grpc:
     image: discount.grpc
-    container_name: discount_grpc
+    container_name: discount_api
     restart: always
     build:
       context: .
@@ -51,15 +49,15 @@
     networks:
       - discount_network
       - basket_network
-  
+
   ### Service Basket ###
-  
+
   basket.database:
     image: postgres:latest
     container_name: basket_database
     networks:
       - basket_network
-  
+
   basket.redis:
     image: redis:latest
     container_name: basket_redis
@@ -92,7 +90,7 @@
         condition: service_started
         required: true
         restart: true
-  
+
   ### Service Ordering ###
 
   ordering.database:
@@ -145,6 +143,37 @@
         condition: service_started
         required: false
 
+  ### API Gateway ###
+
+  yarpapigateway:
+    image: yarpapigateway
+    container_name: yarpapigateway
+    build:
+      context: .
+      dockerfile: eshop.gateway/YarpApiGateway/Dockerfile
+    networks:
+      - ordering_network
+      - basket_network
+      - catalog_network
+      - discount_network
+    depends_on:
+      ordering.api:
+        condition: service_started
+        required: true
+        restart: true
+      basket.api:
+        condition: service_started
+        required: true
+        restart: true
+      catalog.api:
+        condition: service_started
+        required: true
+        restart: true
+      discount.grpc:
+        condition: service_started
+        required: true
+        restart: true
+
 ### Shared infrastructure ###
 volumes:
   catalog_data:
@@ -159,7 +188,6 @@ volumes:
     name: messageBroker_data
   messageBroker_logs:
     name: messageBroker_logs
-
 
 networks:
   catalog_network:

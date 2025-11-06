@@ -33,8 +33,9 @@
   catalog.database:
     restart: always
     shm_size: 128mb
-    ports:
-      - "${CATALOG_POSTGRES_PORT}:5432"
+    # PORTS SUPPRIMÉS - Base de données privée, accessible uniquement par catalog.api
+    # ports:
+    #   - "${CATALOG_POSTGRES_PORT}:5432"
     volumes:
       - catalog_data:/var/lib/postgresql
     environment:
@@ -52,9 +53,10 @@
       retries: 5
 
   catalog.api:
-    ports:
-      - "6060:6060" # REST API (HTTP/1.1)
-      - "6006:6006" # gRPC (HTTP/2)
+    # PORTS SUPPRIMÉS - Service privé, accessible uniquement via la Gateway
+    # ports:
+    #   - "6060:6060" # REST API (HTTP/1.1)
+    #   - "6006:6006" # gRPC (HTTP/2)
     environment:
       - ConnectionStrings__CatalogConnection=Server=catalog.database;Port=5432;Database=CatalogDb;Username=CatalogAdmin;Password=Pass1234!
 
@@ -63,8 +65,9 @@
   basket.database:
     restart: always
     shm_size: 128mb
-    ports:
-      - "${BASKET_POSTGRES_PORT}:5432"
+    # PORTS SUPPRIMÉS - Base de données privée, accessible uniquement par basket.api
+    # ports:
+    #   - "${BASKET_POSTGRES_PORT}:5432"
     volumes:
       - basket_data:/var/lib/postgresql
     environment:
@@ -83,8 +86,9 @@
 
   basket.redis:
     restart: always
-    ports:
-      - "${BASKET_REDIS_PORT}:6379"
+    # PORTS SUPPRIMÉS - Redis privé, accessible uniquement par basket.api
+    # ports:
+    #   - "${BASKET_REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -94,13 +98,14 @@
       retries: 3
 
   basket.api:
-    ports:
-      - "6061:${BASKET_API_PORT}"
+    # PORTS SUPPRIMÉS - Service privé, accessible uniquement via la Gateway
+    # ports:
+    #   - "6061:${BASKET_API_PORT}"
     environment:
       - ASPNETCORE_HTTP_PORTS=${BASKET_API_PORT}
       - ConnectionStrings__BasketConnection=Server=basket.database;Port=5432;Database=${BASKET_POSTGRES_DB};Username=${BASKET_POSTGRES_USER};Password=${BASKET_POSTGRES_PASSWORD}
       - ConnectionStrings__RedisConnection=basket.redis:6379
-      - GrpcSettings__DiscountUrl=http://discount.grpc:6062
+      - GrpcSettings__DiscountUrl=http://discount.grpc:6026
       - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
       - MessageBroker__UserName=${RABBITMQ_USER}
       - MessageBroker__Password=${RABBITMQ_PASSWORD}
@@ -108,9 +113,10 @@
   ### Service Discount ###
 
   discount.grpc:
-    ports:
-      - "6062:6062" # REST API (HTTP/1.1)
-      - "6026:6026" # gRPC (HTTP/2)
+    # PORTS SUPPRIMÉS - Service privé, accessible uniquement via la Gateway
+    # ports:
+    #   - "6062:6062" # REST API (HTTP/1.1)
+    #   - "6026:6026" # gRPC (HTTP/2)
     volumes:
       - ./eshop.services/discount/data:/app/data
     environment:
@@ -120,8 +126,9 @@
   ### Service Ordering ###
   ordering.database:
     restart: always
-    ports:
-      - "${ORDERING_SQLSERVER_PORT}:1433"
+    # PORTS SUPPRIMÉS - SQL Server privé, accessible uniquement par ordering.api
+    # ports:
+    #   - "${ORDERING_SQLSERVER_PORT}:1433"
     volumes:
       - ordering_data:/var/opt/mssql
     environment:
@@ -139,8 +146,9 @@
       start_period: 60s
 
   ordering.api:
-    ports:
-      - "6063:${ORDERING_API_PORT}" #http
+    # PORTS SUPPRIMÉS - Service privé, accessible uniquement via la Gateway
+    # ports:
+    #   - "6063:${ORDERING_API_PORT}" #http
     environment:
       - ASPNETCORE_HTTP_PORTS=${ORDERING_API_PORT}
       - ConnectionStrings__OrderingConnection=Server=ordering_database;Database=${ORDERING_SQLSERVER_DB};User Id=sa;Password=${ORDERING_SQLSERVER_SA_PASSWORD};Encrypt=False;TrustServerCertificate=True
@@ -159,8 +167,9 @@
 
   ### Service Notification ###
   notification.api:
-    ports:
-      - "6064:6064" #http
+    # PORTS SUPPRIMÉS - Service privé (notification interne uniquement)
+    # ports:
+    #   - "6064:6064" #http
     environment:
       - ASPNETCORE_HTTP_PORTS=6064
       - MessageBroker__Host=amqp://ecommerce-rabbitmq-server:5672
@@ -173,3 +182,12 @@
       - EmailSettings__SmtpUsername=
       - EmailSettings__SmtpPassword=
       - EmailSettings__EnableSsl=false
+
+        
+  ### API Gateway ###    
+
+  yarpapigateway:
+    ports:
+      - "6065:${GATEWAY_API_PORT}" #http
+    environment:
+      - ASPNETCORE_HTTP_PORTS=${GATEWAY_API_PORT}
